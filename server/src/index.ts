@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import fs from 'node:fs';
 import { config } from './config.js';
 import { initSchema } from './db/schema.js';
 import { seedDatabase } from './db/seed.js';
@@ -38,8 +39,30 @@ app.use((req, _res, next) => {
   next();
 });
 
-// ── Static: .well-known for domain verification ──
+// ── Domain verification (file first, then env fallback) ──
 const publicDir = path.resolve(__dirname, '../../public');
+app.get('/.well-known/mcp-verification.txt', (_req, res) => {
+  const filePath = path.join(publicDir, '.well-known', 'mcp-verification.txt');
+  try {
+    if (fs.existsSync(filePath)) {
+      const token = fs.readFileSync(filePath, 'utf-8').trim();
+      if (token && token !== 'REPLACE_WITH_YOUR_VERIFICATION_TOKEN') {
+        res.type('text/plain').send(token);
+        return;
+      }
+    }
+  } catch { /* fall through */ }
+
+  const envToken = process.env['MCP_VERIFICATION_TOKEN']?.trim();
+  if (envToken) {
+    res.type('text/plain').send(envToken);
+    return;
+  }
+
+  res.status(404).json({ error: 'Verification token not configured' });
+});
+
+// ── Static files ──
 app.use(express.static(publicDir));
 
 // ── Health check (no auth) ──

@@ -44,7 +44,7 @@ export function createMcpServer(): Server {
     try {
       const args = request.params.arguments ?? {};
       const parsed = tool.parameters.parse(args);
-      const result = tool.handler(parsed as Record<string, unknown>);
+      const result = await tool.handler(parsed as Record<string, unknown>);
 
       logger.info('MCP: tool executed', { tool: toolName });
 
