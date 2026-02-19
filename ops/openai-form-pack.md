@@ -1,7 +1,7 @@
 # OpenAI Platform — MCP Server Form Fill Pack
 
 > Step-by-step values for the OpenAI "MCP Server" registration form.
-> Assumes the server is already running and exposed via public HTTPS.
+> Assumes the server is already running and exposed via **Cloudflare Tunnel** (free).
 
 ---
 
@@ -10,12 +10,11 @@
 | Requirement | How |
 |---|---|
 | Server running | `cd server && npm start` |
-| `cloudflared` installed | `brew install cloudflared` (see [ops/cloudflare/setup.md](cloudflare/setup.md)) |
-| Public HTTPS URL | **Quick:** `cloudflared tunnel --url http://localhost:3030` — gives you `https://random-words.trycloudflare.com` |
-| | **Production:** Named tunnel + custom domain (see [ops/cloudflare/setup.md](cloudflare/setup.md#mode-b--named-tunnel--custom-domain-production)) |
+| `cloudflared` installed | `brew install cloudflared` (macOS) or `winget install Cloudflare.cloudflared` (Windows) |
+| Public HTTPS URL | `cloudflared tunnel --url http://localhost:3030` (quick tunnel) or named tunnel — see [ops/cloudflare/setup.md](../cloudflare/setup.md) |
 | Verification token | Provided by the OpenAI form (step 4 below) |
 
-> **Local-only URLs (`localhost`, `192.168.*`) cannot pass domain verification.** OpenAI must reach your server over the internet via HTTPS. Cloudflare Tunnel provides this for free.
+> **`localhost` and LAN IPs cannot pass domain verification.** OpenAI must reach your server over the internet via HTTPS. Cloudflare Tunnel provides this for free.
 
 ---
 
@@ -24,22 +23,25 @@
 ### 1. MCP Server URL
 
 ```
-https://YOUR_HOSTNAME/mcp
+https://<YOUR_PUBLIC_HOSTNAME>/mcp
 ```
 
 Examples:
-- Cloudflare Tunnel: `https://random-words.trycloudflare.com/mcp`
-- Custom domain: `https://mcp.yourdomain.com/mcp`
-- **NOT valid**: `http://localhost:3030/mcp` (no HTTPS, not reachable)
+
+| Tunnel type | URL |
+|---|---|
+| Quick tunnel | `https://random-words-here.trycloudflare.com/mcp` |
+| Named tunnel + custom domain | `https://mcp.yourdomain.com/mcp` |
+| **NOT valid** | `http://localhost:3030/mcp` — no HTTPS, not reachable by OpenAI |
 
 ### 2. Auth
 
-| Your `.env` AUTH_MODE | OpenAI dropdown | What to enter |
+| Your `.env` `AUTH_MODE` | OpenAI dropdown | What to enter |
 |---|---|---|
-| `no_auth` | Select **"No Auth"** | Nothing else needed |
-| `api_key` | Select **"Custom header"** | Header: `x-api-key` · Value: your `MCP_API_KEY` from `.env` |
+| `no_auth` | **No Auth** | Nothing else needed |
+| `api_key` | **Custom header** | Header: `x-api-key`  •  Value: your `MCP_API_KEY` from `.env` |
 
-> The OpenAI form may label it "API Key" or "Custom header" depending on the version. Either way, the header name is always `x-api-key` and the value is your `MCP_API_KEY`.
+> The OpenAI form may show "API Key" or "Custom header" — either works. The critical part is that the header name is `x-api-key` and the value matches `MCP_API_KEY` in your `.env`.
 
 ### 3. Scan Tools
 
@@ -75,56 +77,52 @@ Expected result: **6 tools discovered**:
    # Restart server
    ```
 
-3. Confirm it works:
+3. Confirm through the tunnel:
    ```bash
-   # Must return the exact token, plain text, no extra whitespace
-   curl https://YOUR_HOSTNAME/.well-known/mcp-verification.txt
+   # Must return the exact token as plain text, status 200
+   curl -i https://YOUR_PUBLIC_HOSTNAME/.well-known/mcp-verification.txt
    ```
 
 4. Click **Verify Domain** in the OpenAI form.
 
 ---
 
-## Pre-Flight Verification Commands
+## Pre-Flight Test Commands
 
-Run these **before** clicking Scan Tools / Verify Domain to ensure everything works.
+Run these **before** clicking Scan Tools / Verify Domain to catch problems early.
 
-Replace `YOUR_HOSTNAME` with your actual public hostname (e.g. `random-words.trycloudflare.com` or `app.example.com`) and `YOUR_KEY` with your `MCP_API_KEY`.
+Replace `YOUR_HOST` with your public hostname (e.g., `random-words.trycloudflare.com`)
+and `YOUR_KEY` with your `MCP_API_KEY`.
 
 ```bash
-# 1. Health check (public URL, confirms tunnel works)
-curl -s https://YOUR_HOSTNAME/health
-# Expected: {"ok":true,"name":"mcp-car-rental","version":"1.0.0"}
+# 1. Health (should return {"ok":true,...})
+curl -s https://YOUR_HOST/health
 
-# 2. Verification token (must return plain text, status 200, no HTML)
-curl -s https://YOUR_HOSTNAME/.well-known/mcp-verification.txt
-# Expected: your exact token, nothing else
+# 2. Verification token (should return exact token, plain text)
+curl -s https://YOUR_HOST/.well-known/mcp-verification.txt
 
 # 3. Auth enforcement (should return 401 if AUTH_MODE=api_key)
-curl -s -o /dev/null -w '%{http_code}' -X POST https://YOUR_HOSTNAME/mcp \
+curl -s -o /dev/null -w '%{http_code}' -X POST https://YOUR_HOST/mcp \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
-# Expected: 401
 
-# 4. tools/list (with auth)
-curl -s --max-time 5 -X POST https://YOUR_HOSTNAME/mcp \
+# 4. tools/list — should return 6 tool names
+curl -s --max-time 5 -X POST https://YOUR_HOST/mcp \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json, text/event-stream' \
   -H 'x-api-key: YOUR_KEY' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' \
   | grep -o '"name":"[^"]*"'
-# Expected: 6 tool names
 
-# 5. tools/call (quick test)
-curl -s --max-time 5 -X POST https://YOUR_HOSTNAME/mcp \
+# 5. tools/call — should return vehicle data
+curl -s --max-time 5 -X POST https://YOUR_HOST/mcp \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json, text/event-stream' \
   -H 'x-api-key: YOUR_KEY' \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"fleet_list_vehicles","arguments":{}}}'
-# Expected: SSE response with vehicle data
 ```
 
-For **local testing** (before exposing), replace `https://YOUR_HOSTNAME` with `http://localhost:3030`.
+For **local testing** (before the tunnel), replace `https://YOUR_HOST` with `http://localhost:3030`.
 
 ---
 
@@ -132,10 +130,11 @@ For **local testing** (before exposing), replace `https://YOUR_HOSTNAME` with `h
 
 | Problem | Cause | Fix |
 |---|---|---|
-| **Domain not verified** | Token mismatch or not served at correct path | Run `curl https://YOUR_HOSTNAME/.well-known/mcp-verification.txt` — must return exact token, no HTML, no redirects, status 200 |
-| **Scan Tools finds 0 tools** | Auth blocking the request, or wrong URL | Check that the URL ends in `/mcp` (not `/mcp/`). If using API Key auth, ensure the key matches. Try with `AUTH_MODE=no_auth` first. |
-| **401 Unauthorized** | Missing or wrong `x-api-key` header | Verify `MCP_API_KEY` in `.env` matches what you entered in the OpenAI form. Or set `AUTH_MODE=no_auth`. |
-| **Connection refused / timeout** | Server not running or not publicly reachable | Check `curl http://localhost:3030/health` locally first. Ensure tunnel is active. |
-| **HTTPS certificate error** | Self-signed cert or no HTTPS | Use Cloudflare Tunnel (provides valid TLS automatically). Do not use self-signed certs. |
-| **Scan Tools hangs** | SSE stream not closing | This is normal for MCP SDK — OpenAI handles SSE. If tools appear, it worked. |
-| **"Invalid Request: Only one initialization request"** | Client sent batched init+request | Server handles single JSON-RPC requests in stateless mode. OpenAI's client does this correctly. |
+| **Domain not verified** | Token mismatch or wrong path | `curl -i https://YOUR_HOST/.well-known/mcp-verification.txt` — must return exact token, `text/plain`, status 200 |
+| **Scan Tools finds 0 tools** | Auth blocking or wrong URL | URL must end in `/mcp` (not `/mcp/`). Check key matches. Try `AUTH_MODE=no_auth` first. |
+| **401 Unauthorized** | Missing/wrong `x-api-key` header | Verify `MCP_API_KEY` in `.env` matches the form value. Or set `AUTH_MODE=no_auth`. |
+| **Connection refused / timeout** | Server or tunnel not running | Check `curl http://localhost:3030/health` locally. Ensure `cloudflared` is active. |
+| **502 Bad Gateway** | Tunnel running but server is down | Start the server: `cd server && npm start` |
+| **HTTPS certificate error** | Self-signed cert or no TLS | Cloudflare Tunnel provides valid TLS automatically. Do not use self-signed certs. |
+| **Scan Tools hangs** | SSE stream behavior | Normal for MCP SDK. If tools appear in the form, it worked. |
+| **Quick tunnel URL changed** | URL changes on each restart | Use a named tunnel for a stable URL, or update the form after restart. |

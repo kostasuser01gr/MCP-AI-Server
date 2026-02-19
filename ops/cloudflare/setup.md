@@ -1,6 +1,6 @@
 # Cloudflare Tunnel Setup
 
-> Expose your local MCP server (`http://localhost:3030`) over public HTTPS for free using Cloudflare Tunnel.
+Expose your local MCP server (`http://localhost:3030`) over public HTTPS — free, no account required for quick tunnels.
 
 ---
 
@@ -18,9 +18,9 @@ brew install cloudflared
 winget install --id Cloudflare.cloudflared
 ```
 
-Or download from https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
+Or download from: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
 
-Verify installation:
+Verify:
 
 ```bash
 cloudflared --version
@@ -28,9 +28,9 @@ cloudflared --version
 
 ---
 
-## Mode A — Quick Tunnel (trycloudflare.com)
+## Mode A: Quick Tunnel (trycloudflare.com)
 
-No account needed. Ideal for testing and one-off sessions.
+No account, no config, no DNS. Best for testing and short-lived sessions.
 
 ### Start
 
@@ -38,9 +38,9 @@ No account needed. Ideal for testing and one-off sessions.
 cloudflared tunnel --url http://localhost:3030
 ```
 
-### Find the public URL
+### Find Your Public URL
 
-`cloudflared` prints a line like:
+`cloudflared` prints it to the terminal:
 
 ```
 +--------------------------------------------------------------------------------------------+
@@ -49,29 +49,28 @@ cloudflared tunnel --url http://localhost:3030
 +--------------------------------------------------------------------------------------------+
 ```
 
-Copy the `https://...trycloudflare.com` URL. This is your public HTTPS endpoint.
+Copy the `https://*.trycloudflare.com` URL. This is your public HTTPS endpoint.
 
-### Verify
+### Test
 
 ```bash
+# Replace with your actual URL
 curl https://random-words-here.trycloudflare.com/health
-# Expected: {"ok":true,"name":"mcp-car-rental","version":"1.0.0"}
-
 curl https://random-words-here.trycloudflare.com/.well-known/mcp-verification.txt
-# Expected: your verification token (plain text)
 ```
 
 ### Limitations
 
-- URL changes every time you restart the tunnel.
-- Cannot use a custom domain.
-- Fine for development and initial OpenAI form testing.
+- URL changes every time you restart `cloudflared`
+- No custom domain
+- Fine for OpenAI registration testing (you can update the URL later)
 
 ---
 
-## Mode B — Named Tunnel + Custom Domain (Production)
+## Mode B: Named Tunnel + Custom Domain (Production)
 
-Requires a free Cloudflare account and a domain managed by Cloudflare DNS.
+Requires a **free Cloudflare account** and a **domain managed by Cloudflare DNS**.
+The URL stays the same across restarts.
 
 ### 1. Authenticate
 
@@ -81,29 +80,29 @@ cloudflared tunnel login
 
 This opens a browser. Select the domain you want to use. A certificate is saved to `~/.cloudflared/cert.pem`.
 
-### 2. Create the tunnel
+### 2. Create the Tunnel
 
 ```bash
 cloudflared tunnel create mcpserver
 ```
 
-Output includes the **Tunnel ID** (a UUID). Note it down. A credentials file is created at:
+Note the **Tunnel ID** printed (e.g., `a1b2c3d4-...`). A credentials file is saved to:
 
 ```
 ~/.cloudflared/<TUNNEL_ID>.json
 ```
 
-### 3. Route DNS
+### 3. Configure DNS
 
 ```bash
-cloudflared tunnel route dns mcpserver app.example.com
+cloudflared tunnel route dns mcpserver mcp.yourdomain.com
 ```
 
-This creates a CNAME record pointing `app.example.com` → `<TUNNEL_ID>.cfargotunnel.com`.
+This creates a CNAME record pointing `mcp.yourdomain.com` → `<TUNNEL_ID>.cfargotunnel.com`.
 
-### 4. Create config file
+### 4. Create Config File
 
-Copy the example config:
+Copy the example config and edit it:
 
 ```bash
 cp ops/cloudflare/config.example.yml ~/.cloudflared/config.yml
@@ -116,40 +115,40 @@ tunnel: mcpserver
 credentials-file: /Users/YOUR_USER/.cloudflared/<TUNNEL_ID>.json
 
 ingress:
-  - hostname: app.example.com
+  - hostname: mcp.yourdomain.com
     service: http://localhost:3030
   - service: http_status:404
 ```
 
 Replace:
-- `YOUR_USER` with your macOS username
-- `<TUNNEL_ID>` with the UUID from step 2
-- `app.example.com` with your actual domain
+- `<TUNNEL_ID>` with your actual tunnel ID
+- `mcp.yourdomain.com` with your actual subdomain
+- `/Users/YOUR_USER` with your home directory path
 
-### 5. Start the tunnel
+### 5. Run the Named Tunnel
 
 ```bash
 cloudflared tunnel run mcpserver
 ```
 
-### 6. Verify
+### 6. Test
 
 ```bash
-curl https://app.example.com/health
-curl https://app.example.com/.well-known/mcp-verification.txt
+curl https://mcp.yourdomain.com/health
+curl https://mcp.yourdomain.com/.well-known/mcp-verification.txt
 ```
 
 ---
 
-## Auto-Start Tunnel as a System Service
+## Auto-Start the Tunnel as a System Service
 
-### macOS (launchd)
+### macOS
 
 ```bash
 sudo cloudflared service install
 ```
 
-This installs a LaunchDaemon at `/Library/LaunchDaemons/com.cloudflare.cloudflared.plist` that starts the tunnel automatically on boot using `~/.cloudflared/config.yml`.
+This installs a LaunchDaemon that starts `cloudflared` on boot using `~/.cloudflared/config.yml`.
 
 To uninstall:
 
@@ -160,16 +159,16 @@ sudo cloudflared service uninstall
 Check status:
 
 ```bash
-sudo launchctl list | grep cloudflare
+sudo launchctl list | grep cloudflared
 ```
 
-View logs:
+Logs:
 
 ```bash
 tail -f /Library/Logs/com.cloudflare.cloudflared.log
 ```
 
-> **Note:** The system service uses the config file at `~/.cloudflared/config.yml`. Make sure it exists and is correct before installing the service.
+> **Note:** The service runs the **named tunnel** from `~/.cloudflared/config.yml`. Quick tunnels (`--url` mode) cannot be installed as a service.
 
 ### Windows
 
@@ -177,45 +176,71 @@ tail -f /Library/Logs/com.cloudflare.cloudflared.log
 cloudflared service install
 ```
 
-This registers a Windows Service that starts on boot. Manage it via Services (`services.msc`) or:
+This registers a Windows Service. It starts automatically on boot.
+
+To uninstall:
 
 ```powershell
-sc query cloudflared
-sc stop cloudflared
-sc start cloudflared
+cloudflared service uninstall
 ```
 
 ---
 
-## Combining with MCP Server launchd Service
+## Verification Compatibility
 
-If you already run the MCP server via launchd (see `ops/macos/install.sh`), the typical boot sequence is:
+OpenAI domain verification requires:
 
-1. macOS starts → launchd launches the MCP server on `localhost:3030`
-2. macOS starts → launchd/LaunchDaemon starts `cloudflared` tunnel
-3. Public HTTPS traffic flows: `app.example.com` → Cloudflare → `localhost:3030`
+1. **Public HTTPS** — `localhost` and LAN IPs will not work.
+2. **Plain text response** — `GET /.well-known/mcp-verification.txt` must return the token as `text/plain`, no HTML, no redirects.
+3. **Exact match** — No trailing newline, no extra whitespace around the token.
 
-Both services auto-restart independently. No manual intervention after reboot.
+### Set the verification token
+
+```bash
+cd server
+npm run set:verify-token -- "TOKEN_FROM_OPENAI"
+```
+
+Or set `MCP_VERIFICATION_TOKEN=TOKEN_FROM_OPENAI` in `.env` and restart.
+
+### Verify it works through the tunnel
+
+```bash
+# Must return the exact token, status 200, content-type text/plain
+curl -i https://YOUR_PUBLIC_HOSTNAME/.well-known/mcp-verification.txt
+
+# Must return {"ok":true,...}
+curl https://YOUR_PUBLIC_HOSTNAME/health
+```
 
 ---
 
-## OpenAI Registration
+## Running Both Server + Tunnel
 
-Once the tunnel is running and verified:
+Open two terminals:
 
-1. Use `https://app.example.com/mcp` (or your trycloudflare.com URL) as the **MCP Server URL** in the OpenAI form.
-2. Follow the steps in [ops/openai-form-pack.md](../openai-form-pack.md) for auth, tool scanning, and domain verification.
+```bash
+# Terminal 1: Start server
+cd server && npm start
+
+# Terminal 2: Start tunnel
+cloudflared tunnel --url http://localhost:3030
+# or for named tunnel:
+cloudflared tunnel run mcpserver
+```
+
+Or with the launchd service (server) + cloudflared service (tunnel), both start automatically at login/boot.
 
 ---
 
 ## Troubleshooting
 
-| Problem | Fix |
-|---|---|
-| `cloudflared: command not found` | Run `brew install cloudflared` (macOS) or reinstall |
-| Quick tunnel URL not working | Wait 10-20 seconds after startup. Check that the MCP server is running on port 3030. |
-| `failed to connect to origin` | Server not running locally. Start it: `cd server && npm start` |
-| DNS not resolving (named tunnel) | Wait for DNS propagation (up to 5 min). Verify CNAME: `dig app.example.com CNAME` |
-| `config.yml not found` | Copy `ops/cloudflare/config.example.yml` to `~/.cloudflared/config.yml` and edit it |
-| Service install fails (macOS) | Use `sudo`. Ensure `~/.cloudflared/config.yml` exists. |
-| Tunnel runs but 502 Bad Gateway | Local server is down or listening on a different port. Check `PORT` in `.env`. |
+| Problem | Cause | Fix |
+|---------|-------|-----|
+| `cloudflared: command not found` | Not installed | `brew install cloudflared` |
+| Tunnel starts but URL unreachable | Server not running on port 3030 | Start the server first: `cd server && npm start` |
+| `502 Bad Gateway` in browser | Server crashed or wrong port | Check `curl http://localhost:3030/health` locally |
+| DNS not resolving (named tunnel) | CNAME not created | Run `cloudflared tunnel route dns mcpserver mcp.yourdomain.com` |
+| Service won't start | No config.yml | Create `~/.cloudflared/config.yml` (see step 4 above) |
+| Quick tunnel URL changed | Normal — URL changes on restart | Use a named tunnel for a stable URL |
+| Verification returns HTML | Cloudflare is serving an error page | Ensure server is running and returning plain text at the path |
