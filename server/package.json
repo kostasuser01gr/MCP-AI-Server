@@ -10,6 +10,7 @@
     "start": "node dist/index.js",
     "seed": "tsx src/db/seed.ts",
     "smoke": "tsx src/smoke.ts",
+    "verify:domain:test": "tsx src/verify-domain.ts",
     "set:verify-token": "node -e \"const fs=require('fs');const p=require('path').resolve(__dirname,'../public/.well-known');fs.mkdirSync(p,{recursive:true});fs.writeFileSync(p+'/mcp-verification.txt',process.argv[1]);console.log('✓ Token written')\" --"
   },
   "dependencies": {

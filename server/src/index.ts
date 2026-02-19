@@ -28,6 +28,10 @@ seedDatabase();
 // ── Express ──
 const app = express();
 
+// Behind Cloudflare Tunnel — trust proxy so req.protocol, req.hostname,
+// req.ip resolve correctly through the tunnel.
+app.set('trust proxy', true);
+
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
 
@@ -39,27 +43,54 @@ app.use((req, _res, next) => {
   next();
 });
 
-// ── Domain verification (file first, then env fallback) ──
+// ── Domain verification (hardened for OpenAI fetch behaviour) ──────────────
+// OpenAI's verifier expects EXACTLY: HTTP 200, text/plain body, no redirects.
+// We bypass Express's send() pipeline (which can produce 304 via ETag) and
+// write the response manually to guarantee a 200 every time.
 const publicDir = path.resolve(__dirname, '../../public');
-app.get('/.well-known/mcp-verification.txt', (_req, res) => {
+app.get('/.well-known/mcp-verification.txt', (req, res) => {
+  logger.info('Verification request received', {
+    ip: req.ip,
+    host: req.hostname,
+    protocol: req.protocol,
+    userAgent: req.headers['user-agent'] ?? 'unknown',
+    ifNoneMatch: req.headers['if-none-match'] ?? 'none',
+  });
+
+  let token: string | undefined;
+
+  // Priority 1 — file on disk
   const filePath = path.join(publicDir, '.well-known', 'mcp-verification.txt');
   try {
     if (fs.existsSync(filePath)) {
-      const token = fs.readFileSync(filePath, 'utf-8').trim();
-      if (token && token !== 'REPLACE_WITH_YOUR_VERIFICATION_TOKEN') {
-        res.type('text/plain').send(token);
-        return;
+      const raw = fs.readFileSync(filePath, 'utf-8').trim();
+      if (raw && raw !== 'REPLACE_WITH_YOUR_VERIFICATION_TOKEN') {
+        token = raw;
       }
     }
   } catch { /* fall through */ }
 
-  const envToken = process.env['MCP_VERIFICATION_TOKEN']?.trim();
-  if (envToken) {
-    res.type('text/plain').send(envToken);
+  // Priority 2 — environment variable
+  if (!token) {
+    token = process.env['MCP_VERIFICATION_TOKEN']?.trim();
+  }
+
+  if (!token) {
+    logger.warn('Verification token not configured');
+    res.status(404).type('text/plain').send('Verification token not configured');
     return;
   }
 
-  res.status(404).json({ error: 'Verification token not configured' });
+  // Bypass Express ETag / conditional-request pipeline entirely.
+  // Write raw response to guarantee HTTP 200 + plain text body every time.
+  res.writeHead(200, {
+    'Content-Type': 'text/plain; charset=utf-8',
+    'Content-Length': Buffer.byteLength(token, 'utf-8'),
+    'Cache-Control': 'no-store, no-cache, must-revalidate',
+    'Pragma': 'no-cache',
+    'X-Content-Type-Options': 'nosniff',
+  });
+  res.end(token);
 });
 
 // ── Static files ──
