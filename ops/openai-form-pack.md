@@ -10,10 +10,12 @@
 | Requirement | How |
 |---|---|
 | Server running | `cd server && npm start` |
-| Public HTTPS URL | Use **Cloudflare Tunnel** (free): `cloudflared tunnel --url http://localhost:3030` |
-| Verification token | Provided by the OpenAI form (step 2 below) |
+| `cloudflared` installed | `brew install cloudflared` (see [ops/cloudflare/setup.md](cloudflare/setup.md)) |
+| Public HTTPS URL | **Quick:** `cloudflared tunnel --url http://localhost:3030` — gives you `https://random-words.trycloudflare.com` |
+| | **Production:** Named tunnel + custom domain (see [ops/cloudflare/setup.md](cloudflare/setup.md#mode-b--named-tunnel--custom-domain-production)) |
+| Verification token | Provided by the OpenAI form (step 4 below) |
 
-> **Local-only URLs (`localhost`, `192.168.*`) cannot pass domain verification.** OpenAI must reach your server over the internet via HTTPS.
+> **Local-only URLs (`localhost`, `192.168.*`) cannot pass domain verification.** OpenAI must reach your server over the internet via HTTPS. Cloudflare Tunnel provides this for free.
 
 ---
 
@@ -32,14 +34,12 @@ Examples:
 
 ### 2. Auth
 
-| Your `.env` AUTH_MODE | OpenAI dropdown | Additional config |
+| Your `.env` AUTH_MODE | OpenAI dropdown | What to enter |
 |---|---|---|
-| `no_auth` | **No Auth** | — |
-| `api_key` | **API Key** | Header name: `x-api-key`, Value: your `MCP_API_KEY` |
+| `no_auth` | Select **"No Auth"** | Nothing else needed |
+| `api_key` | Select **"Custom header"** | Header: `x-api-key` · Value: your `MCP_API_KEY` from `.env` |
 
-> If the OpenAI form shows "Custom header" instead of "API Key", enter:
-> - Header: `x-api-key`
-> - Value: *(your MCP_API_KEY value)*
+> The OpenAI form may label it "API Key" or "Custom header" depending on the version. Either way, the header name is always `x-api-key` and the value is your `MCP_API_KEY`.
 
 ### 3. Scan Tools
 
@@ -89,14 +89,14 @@ Expected result: **6 tools discovered**:
 
 Run these **before** clicking Scan Tools / Verify Domain to ensure everything works.
 
-Replace `YOUR_HOSTNAME` with your actual public hostname and `YOUR_KEY` with your `MCP_API_KEY`.
+Replace `YOUR_HOSTNAME` with your actual public hostname (e.g. `random-words.trycloudflare.com` or `app.example.com`) and `YOUR_KEY` with your `MCP_API_KEY`.
 
 ```bash
-# 1. Health check
+# 1. Health check (public URL, confirms tunnel works)
 curl -s https://YOUR_HOSTNAME/health
 # Expected: {"ok":true,"name":"mcp-car-rental","version":"1.0.0"}
 
-# 2. Verification token
+# 2. Verification token (must return plain text, status 200, no HTML)
 curl -s https://YOUR_HOSTNAME/.well-known/mcp-verification.txt
 # Expected: your exact token, nothing else
 

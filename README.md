@@ -55,35 +55,73 @@ By default, all requests to `/mcp` require an `x-api-key` header matching `MCP_A
 
 For local development, set `AUTH_MODE=no_auth` in `.env` to skip auth.
 
-## Exposing Your Server
+## Exposing Your Server (Cloudflare Tunnel)
 
-The server runs on `http://localhost:3030` by default. To register it with OpenAI, you need a **public HTTPS URL**.
+The server runs on `http://localhost:3030` by default. To register it with OpenAI, you need a **public HTTPS URL**. The recommended free method is **Cloudflare Tunnel**.
 
-| Option | Cost | Notes |
-|--------|------|-------|
-| **LAN only** | Free | Works with local MCP clients. Cannot pass OpenAI domain verification. |
-| **Cloudflare Tunnel** | Free | `cloudflared tunnel --url http://localhost:3030` gives you a public `https://*.trycloudflare.com` URL. No account needed for quick tunnels. |
-| **Always-on device** | Free–low | Mac Mini, Raspberry Pi, Oracle Cloud Free Tier, etc. Best for 24/7 availability. |
+### Quick Tunnel (no account needed)
 
-> `ngrok` also works but the free tier has session time limits. Cloudflare quick tunnels have no such limit.
+```bash
+brew install cloudflared
+cloudflared tunnel --url http://localhost:3030
+```
+
+Copy the `https://...trycloudflare.com` URL printed in the terminal. Done.
+
+### Named Tunnel + Custom Domain
+
+For a stable URL that survives restarts, set up a named tunnel with your own domain:
+
+```bash
+cloudflared tunnel login
+cloudflared tunnel create mcpserver
+cloudflared tunnel route dns mcpserver app.example.com
+cp ops/cloudflare/config.example.yml ~/.cloudflared/config.yml  # edit placeholders
+cloudflared tunnel run mcpserver
+```
+
+### Auto-Start on Boot (macOS)
+
+```bash
+sudo cloudflared service install
+```
+
+Full step-by-step guide: [ops/cloudflare/setup.md](ops/cloudflare/setup.md)
+
+### Verify the tunnel works
+
+```bash
+curl https://YOUR_HOSTNAME/health
+curl https://YOUR_HOSTNAME/.well-known/mcp-verification.txt
+```
+
+> `localhost` and LAN IPs **cannot** pass OpenAI domain verification. You must use a public HTTPS URL.
 
 ## OpenAI Platform Setup
 
-Requires a **public HTTPS URL** (see above).
+Requires a **public HTTPS URL** via Cloudflare Tunnel (see above).
 
-1. Set `MCP_API_KEY` in `.env` (or use `AUTH_MODE=no_auth` for initial testing).
-2. Start a tunnel: `cloudflared tunnel --url http://localhost:3030`
-3. In OpenAI platform → App → **MCP Server** step:
+1. Start the server and tunnel:
+   ```bash
+   cd server && npm start                          # localhost:3030
+   cloudflared tunnel --url http://localhost:3030   # public HTTPS
+   ```
+2. In OpenAI platform → App → **MCP Server** step:
    - **MCP Server URL**: `https://YOUR_TUNNEL_HOSTNAME/mcp`
-   - **Auth**: select **API Key** and enter your `MCP_API_KEY`, or select **No Auth** if `AUTH_MODE=no_auth`.
-   - Click **Scan Tools** — OpenAI will call `tools/list` and discover the 6 tools.
-4. **Domain verification**:
-   - Copy the verification token shown by OpenAI.
-   - Paste it as the **only content** of `public/.well-known/mcp-verification.txt` (no extra whitespace).
-   - Restart the server (the file is served as static `text/plain`).
-   - Verify it works: `curl https://YOUR_TUNNEL_HOSTNAME/.well-known/mcp-verification.txt` — must return the token exactly.
-   - Click **Verify Domain** in the OpenAI form.
-5. Continue through the remaining steps (Testing → Screenshots → Submit).
+   - **Auth**: select **Custom header** → Header: `x-api-key`, Value: your `MCP_API_KEY`.
+     Or select **No Auth** if `AUTH_MODE=no_auth`.
+   - Click **Scan Tools** — expects 6 tools.
+3. **Domain verification**:
+   ```bash
+   # Set the token OpenAI gives you:
+   cd server && npm run set:verify-token -- "PASTE_TOKEN_HERE"
+   # Confirm it serves correctly:
+   curl https://YOUR_TUNNEL_HOSTNAME/.well-known/mcp-verification.txt
+   ```
+   Click **Verify Domain** in the OpenAI form.
+4. Continue through Testing → Screenshots → Submit.
+
+> Detailed form field values, pre-flight commands, and troubleshooting: [ops/openai-form-pack.md](ops/openai-form-pack.md)
 
 ## Database
 
@@ -184,10 +222,15 @@ mcp-car-rental/
 ├── public/
 │   └── .well-known/
 │       └── mcp-verification.txt
-├── ops/macos/                # launchd service files
-│   ├── com.kostas.mcp-car-rental.plist
-│   ├── install.sh
-│   └── uninstall.sh
+├── ops/
+│   ├── cloudflare/               # Cloudflare Tunnel setup
+│   │   ├── setup.md              # Step-by-step tunnel guide
+│   │   └── config.example.yml    # Named tunnel config template
+│   ├── macos/                    # launchd service files
+│   │   ├── com.kostas.mcp-car-rental.plist
+│   │   ├── install.sh
+│   │   └── uninstall.sh
+│   └── openai-form-pack.md      # OpenAI form field values + pre-flight
 └── server/
     ├── package.json
     ├── tsconfig.json
