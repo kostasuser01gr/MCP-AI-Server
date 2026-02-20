@@ -107,17 +107,22 @@ By default, all requests to `/mcp` require an `x-api-key` header matching `MCP_A
 
 For local development, set `AUTH_MODE=no_auth` in `.env` to skip auth.
 
-## Exposing Your Server (Cloudflare Tunnel)
+## Exposing Your Server (Public HTTPS)
 
-The server runs on `http://localhost:3030` by default. To register it with OpenAI, you need a **public HTTPS URL**. We recommend **Cloudflare Tunnel** (free).
+The server runs on `http://localhost:3030` by default. OpenAI MCP registration requires a **public HTTPS URL**.
 
-| Mode | Cost | URL Stability | Account Required |
-|------|------|---------------|------------------|
-| **Quick tunnel** | Free | Changes on restart | No |
-| **Named tunnel + custom domain** | Free | Permanent | Yes (free plan) |
-| **LAN only** | Free | N/A | No — but cannot pass OpenAI domain verification |
+| Option | Cost | URL Stability | Best for |
+|------|------|---------------|----------|
+| **Vercel** | Free tier available | Stable | Managed hosting, no local tunnel process |
+| **Cloudflare Tunnel (quick)** | Free | Changes on restart | Fast local testing |
+| **Cloudflare Tunnel (named)** | Free | Stable | Self-hosting with your own domain |
 
-### Quick Start (one command)
+### Option A — Vercel (recommended for stable MCP endpoint)
+
+See [deploy/vercel.md](deploy/vercel.md).  
+Your OpenAI MCP URL will be: `https://YOUR_APP.vercel.app/mcp`.
+
+### Option B — Cloudflare Tunnel (run locally + expose)
 
 ```bash
 brew install cloudflared
@@ -126,34 +131,27 @@ cloudflared tunnel --url http://localhost:3030
 
 Copy the `https://*.trycloudflare.com` URL printed in the terminal.
 
-### Named Tunnel (stable URL)
-
-See [ops/cloudflare/setup.md](ops/cloudflare/setup.md) for full instructions including:
-- Named tunnel creation
-- Custom domain DNS routing
-- Auto-start as macOS/Windows service
-- Example config: [ops/cloudflare/config.example.yml](ops/cloudflare/config.example.yml)
-
-> `ngrok` also works but the free tier has session time limits. Cloudflare quick tunnels have no such limit.
+For stable tunnel domains, see [ops/cloudflare/setup.md](ops/cloudflare/setup.md) and [ops/cloudflare/config.example.yml](ops/cloudflare/config.example.yml).
 
 ## OpenAI Platform Setup
 
-Requires a **public HTTPS URL** (see [Exposing Your Server](#exposing-your-server-cloudflare-tunnel) above).
+Requires a **public HTTPS URL** (see [Exposing Your Server](#exposing-your-server-public-https) above).
 
 1. Set `MCP_API_KEY` in `.env` (or use `AUTH_MODE=no_auth` for initial testing).
-2. Start the server: `cd server && npm start`
-3. Start a tunnel: `cloudflared tunnel --url http://localhost:3030`
-4. In OpenAI platform → App → **MCP Server** step:
-   - **MCP Server URL**: `https://YOUR_TUNNEL_HOSTNAME/mcp`
+2. Pick one deployment path:
+   - **Vercel**: deploy `server/` per [deploy/vercel.md](deploy/vercel.md)
+   - **Cloudflare Tunnel**: start server (`cd server && npm start`) and then run `cloudflared tunnel --url http://localhost:3030`
+3. In OpenAI platform → App → **MCP Server** step:
+   - **MCP Server URL**: `https://YOUR_PUBLIC_HOSTNAME/mcp`
    - **Auth**: select **Custom header** → Header: `x-api-key`, Value: your `MCP_API_KEY`. Or select **No Auth** if `AUTH_MODE=no_auth`.
    - Click **Scan Tools** — expects 6 tools.
-5. **Domain verification**:
+4. **Domain verification**:
    ```bash
    cd server && npm run set:verify-token -- "TOKEN_FROM_OPENAI"
    ```
-   Confirm: `curl https://YOUR_TUNNEL_HOSTNAME/.well-known/mcp-verification.txt` — must return the exact token as plain text.
+   Confirm: `curl https://YOUR_PUBLIC_HOSTNAME/.well-known/mcp-verification.txt` — must return the exact token as plain text.
    Click **Verify Domain** in the form.
-6. Continue through the remaining steps (Testing → Screenshots → Submit).
+5. Continue through the remaining steps (Testing → Screenshots → Submit).
 
 > Full form field reference with troubleshooting: [ops/openai-form-pack.md](ops/openai-form-pack.md)
 

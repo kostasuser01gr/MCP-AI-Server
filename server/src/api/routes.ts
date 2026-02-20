@@ -16,7 +16,9 @@ export const apiRouter = Router();
 
 apiRouter.post('/auth/signup', async (req: Request, res: Response) => {
   try {
-    const { email, password, name } = req.body;
+    const email = typeof req.body?.email === 'string' ? req.body.email.trim() : '';
+    const password = typeof req.body?.password === 'string' ? req.body.password : '';
+    const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
     if (!email || !password || !name) {
       res.status(400).json({ error: 'email, password, and name are required' });
       return;
@@ -34,7 +36,8 @@ apiRouter.post('/auth/signup', async (req: Request, res: Response) => {
 
 apiRouter.post('/auth/login', async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const email = typeof req.body?.email === 'string' ? req.body.email.trim() : '';
+    const password = typeof req.body?.password === 'string' ? req.body.password : '';
     if (!email || !password) {
       res.status(400).json({ error: 'email and password are required' });
       return;
