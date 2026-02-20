@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
@@ -63,12 +64,34 @@ export function getApp(): express.Express {
   bootstrap();
 
   const app = express();
+  app.set('trust proxy', 1);
+
+  const mcpLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 120,
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
 
   app.use(cors({
     origin: clientOrigin,
     credentials: true,
   }));
-  app.use(express.json({ limit: '2mb' }));
+  const jsonParser = express.json({ limit: '2mb' });
+  app.use((req, res, next) => {
+    if ((req as express.Request & { body?: unknown }).body !== undefined) {
+      next();
+      return;
+    }
+    jsonParser(req, res, next);
+  });
 
   // Request logging (skip /health)
   app.use((req, _res, next) => {
@@ -110,11 +133,24 @@ export function getApp(): express.Express {
     res.json({ ok: true, name: 'mcp-car-rental', version: '1.0.0' });
   });
 
+  // ── Root info endpoint ──
+  app.get('/', (_req, res) => {
+    res.json({
+      ok: true,
+      name: 'mcp-car-rental',
+      endpoints: {
+        health: '/health',
+        mcp: '/mcp',
+        api: '/api/v1',
+      },
+    });
+  });
+
   // ── MCP endpoint (auth-protected) ──
-  app.use('/mcp', apiKeyAuth, mcpRouter);
+  app.use('/mcp', mcpLimiter, apiKeyAuth, mcpRouter);
 
   // ── REST API (JWT-protected internally) ──
-  app.use('/api/v1', apiRouter);
+  app.use('/api/v1', apiLimiter, apiRouter);
 
   // ── Fallback 404 ──
   app.use((_req, res) => {

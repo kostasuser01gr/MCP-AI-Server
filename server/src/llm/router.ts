@@ -26,7 +26,7 @@ class AIRouter {
         || '';
 
       if (!key) {
-        logger.debug(`No API key for ${config.name} (${config.apiKeyEnv}), skipping`);
+        logger.debug(`No API key configured for provider ${config.name}, skipping`);
         continue;
       }
 

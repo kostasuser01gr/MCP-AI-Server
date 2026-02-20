@@ -77,7 +77,7 @@ export async function signup(email: string, password: string, name: string): Pro
   const token = signToken({ userId: id, email: user.email, role: user.role });
 
   const { password_hash: _, ...safeUser } = user;
-  logger.info(`User signed up: ${normalizedEmail} (role=${role})`);
+  logger.info('User signed up', { role });
   return { token, user: safeUser };
 }
 
@@ -94,7 +94,7 @@ export async function login(email: string, password: string): Promise<{ token: s
   const token = signToken({ userId: user.id, email: user.email, role: user.role });
   const { password_hash: _, ...safeUser } = user;
 
-  logger.info(`User logged in: ${normalizedEmail}`);
+  logger.info('User logged in');
   return { token, user: safeUser };
 }
 

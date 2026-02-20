@@ -1,6 +1,7 @@
 /* ── REST API Routes ── */
 
 import { Router, type Request, type Response } from 'express';
+import rateLimit from 'express-rate-limit';
 import { signup, login, getUserById, type UserRow } from '../auth/jwt.js';
 import { jwtAuth, requireAdmin } from '../auth/middleware.js';
 import { chatRouter } from '../chat/routes.js';
@@ -12,9 +13,16 @@ import { logger } from '../logger.js';
 
 export const apiRouter = Router();
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 /* ═══════ Auth (public) ═══════ */
 
-apiRouter.post('/auth/signup', async (req: Request, res: Response) => {
+apiRouter.post('/auth/signup', authLimiter, async (req: Request, res: Response) => {
   try {
     const email = typeof req.body?.email === 'string' ? req.body.email.trim() : '';
     const password = typeof req.body?.password === 'string' ? req.body.password : '';
@@ -34,7 +42,7 @@ apiRouter.post('/auth/signup', async (req: Request, res: Response) => {
   }
 });
 
-apiRouter.post('/auth/login', async (req: Request, res: Response) => {
+apiRouter.post('/auth/login', authLimiter, async (req: Request, res: Response) => {
   try {
     const email = typeof req.body?.email === 'string' ? req.body.email.trim() : '';
     const password = typeof req.body?.password === 'string' ? req.body.password : '';
@@ -157,7 +165,7 @@ apiRouter.post('/admin/keys', (req: Request, res: Response) => {
   // Register in the AI router
   aiRouter.addProvider(provider, key);
 
-  logger.info(`API key added for ${provider} by ${req.user!.email}`);
+  logger.info('API key added', { provider });
   res.status(201).json({ id, provider, key_preview: preview });
 });
 
