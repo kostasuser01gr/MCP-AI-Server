@@ -87,9 +87,10 @@ Add keys in `.env` or at runtime via **Admin → API Keys**. You don't need all 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | `3030` | HTTP port |
-| `MCP_API_KEY` | _(empty)_ | Required in `api_key` mode |
+| `MCP_API_KEY` | _(empty)_ | Required in production when `AUTH_MODE=api_key` |
 | `AUTH_MODE` | `api_key` | `api_key` or `no_auth` |
-| `JWT_SECRET` | `dev-secret...` | JWT signing secret (change in production!) |
+| `JWT_SECRET` | `dev-secret...` | JWT signing secret (must be changed in production) |
+| `MCP_VERIFICATION_TOKEN` | _(empty)_ | OpenAI domain verification token fallback |
 | `DB_PATH` | `./data/app.db` | SQLite database file |
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
 | `CLIENT_ORIGIN` | `http://localhost:3001` | CORS origin for client |
@@ -122,6 +123,10 @@ The server runs on `http://localhost:3030` by default. OpenAI MCP registration r
 See [deploy/vercel.md](deploy/vercel.md).  
 Your OpenAI MCP URL will be: `https://YOUR_APP.vercel.app/mcp`.
 
+Important:
+- Use the canonical public production alias for OpenAI (for this project: `https://mcp-car-rental.vercel.app/mcp`).
+- Do not use deployment-specific or git aliases for OpenAI unless you intentionally disabled Vercel Authentication on those aliases.
+
 ### Option B — Cloudflare Tunnel (run locally + expose)
 
 ```bash
@@ -139,7 +144,7 @@ Requires a **public HTTPS URL** (see [Exposing Your Server](#exposing-your-serve
 
 1. Set `MCP_API_KEY` in `.env` (or use `AUTH_MODE=no_auth` for initial testing).
 2. Pick one deployment path:
-   - **Vercel**: deploy `server/` per [deploy/vercel.md](deploy/vercel.md)
+   - **Vercel**: deploy from repo root per [deploy/vercel.md](deploy/vercel.md)
    - **Cloudflare Tunnel**: start server (`cd server && npm start`) and then run `cloudflared tunnel --url http://localhost:3030`
 3. In OpenAI platform → App → **MCP Server** step:
    - **MCP Server URL**: `https://YOUR_PUBLIC_HOSTNAME/mcp`
@@ -249,6 +254,9 @@ This verifies: health endpoint, MCP tools/list, tools/call, auth, and verificati
 | `npm run build` fails | Run `npm install` first. Check Node.js ≥ 20. |
 | Port 3030 in use | Set `PORT=3031` in `.env`, or kill the old process |
 | 401 on /mcp | Set `x-api-key` header, or use `AUTH_MODE=no_auth` |
+| 401 Authentication Required on `*.vercel.app` | Use canonical alias `mcp-car-rental.vercel.app`, or disable Vercel Authentication for production deployment URLs/aliases in Project Settings |
+| 404 NOT_FOUND on Vercel | Confirm root `vercel.json` + `api/index.ts` exist and project Root Directory is `.` |
+| `FUNCTION_INVOCATION_FAILED` on Vercel | Check runtime logs and verify required env vars (`MCP_API_KEY`, `JWT_SECRET`, `AUTH_MODE`, `DB_PATH`) are set correctly |
 | DB locked errors | Only one server process should access DB. Stop duplicates. |
 | launchd won't start | Check `~/Library/Logs/mcp-car-rental/err.log` |
 | Server stops when lid closes | See "Lid Closed" section above |

@@ -5,14 +5,9 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuid } from 'uuid';
 import { getDb } from '../db/connection.js';
 import { logger } from '../logger.js';
+import { config } from '../config.js';
 
-const JWT_SECRET = (() => {
-  const secret = process.env['JWT_SECRET'];
-  if (!secret && process.env['NODE_ENV'] === 'production') {
-    throw new Error('JWT_SECRET must be set in production');
-  }
-  return secret || 'dev-secret-change-in-production';
-})();
+const JWT_SECRET = config.JWT_SECRET;
 const JWT_EXPIRES = '7d';
 
 export interface JWTPayload {

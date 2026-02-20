@@ -4,6 +4,7 @@ import rateLimit from 'express-rate-limit';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
+import { config } from './config.js';
 import { initSchema } from './db/schema.js';
 import { seedDatabase } from './db/seed.js';
 import { apiKeyAuth } from './auth/middleware.js';
@@ -22,7 +23,6 @@ import './tools/knowledge.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.resolve(__dirname, '../../public');
-const clientOrigin = (process.env['CLIENT_ORIGIN'] || 'http://localhost:3001').trim();
 
 let bootstrapped = false;
 let cachedApp: express.Express | null = null;
@@ -88,7 +88,7 @@ export function getApp(): express.Express {
   });
 
   app.use(cors({
-    origin: clientOrigin,
+    origin: config.CLIENT_ORIGIN,
     credentials: true,
   }));
   const jsonParser = express.json({ limit: '2mb' });
@@ -124,9 +124,8 @@ export function getApp(): express.Express {
       // fall through
     }
 
-    const envToken = process.env['MCP_VERIFICATION_TOKEN']?.trim();
-    if (envToken) {
-      res.type('text/plain').send(envToken);
+    if (config.MCP_VERIFICATION_TOKEN) {
+      res.type('text/plain').send(config.MCP_VERIFICATION_TOKEN);
       return;
     }
 

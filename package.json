@@ -5,6 +5,11 @@
     "dev": "npm run dev:server",
     "dev:server": "npm --prefix server run dev",
     "dev:client": "npm --prefix client run dev",
+    "verify:install": "npm --prefix server ci && npm --prefix client ci",
+    "verify:lint": "npm --prefix client run lint",
+    "verify:test": "npm --prefix server test",
+    "verify:build": "npm --prefix server run build && npm --prefix client run build",
+    "verify:release": "npm run verify:install && npm run verify:lint && npm run verify:test && npm run verify:build",
     "vercel-build": "npm --prefix server install && npm --prefix server run build",
     "build": "npm run vercel-build"
   }
