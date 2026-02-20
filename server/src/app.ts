@@ -154,6 +154,14 @@ export function getApp(): express.Express {
     });
   });
 
+  // Avoid noisy 404s from bots/probes requesting common favicon paths.
+  app.get('/favicon.ico', (_req, res) => {
+    res.status(204).end();
+  });
+  app.get('/favicon.png', (_req, res) => {
+    res.status(204).end();
+  });
+
   // ── MCP endpoint (auth-protected) ──
   app.use('/mcp', mcpLimiter, apiKeyAuth, mcpRouter);
 
