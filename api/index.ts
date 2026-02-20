@@ -8,7 +8,7 @@ let appPromise: Promise<((req: any, res: any) => void)> | null = null;
 
 async function loadApp() {
   if (!appPromise) {
-    appPromise = import('../src/app.js').then((m) => m.getApp());
+    appPromise = import('../server/src/app.js').then((m) => m.getApp());
   }
   return appPromise;
 }
