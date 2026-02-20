@@ -73,6 +73,13 @@ export function getApp(): express.Express {
     legacyHeaders: false,
   });
 
+  const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 1200,
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
   const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 300,
@@ -92,6 +99,7 @@ export function getApp(): express.Express {
     }
     jsonParser(req, res, next);
   });
+  app.use(globalLimiter);
 
   // Request logging (skip /health)
   app.use((req, _res, next) => {
