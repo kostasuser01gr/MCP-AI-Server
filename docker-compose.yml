@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.server
+    ports:
+      - '3030:3030'
+    env_file: .env
+    environment:
+      - NODE_ENV=production
+      - DB_PATH=/data/app.db
+    volumes:
+      - db-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3030/health']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  client:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.client
+    ports:
+      - '3001:3001'
+    environment:
+      - NEXT_PUBLIC_API_URL=http://server:3030
+    depends_on:
+      server:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  db-data:

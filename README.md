@@ -1,24 +1,58 @@
 # MCP Car Rental
 
-Local MCP server for a car rental fleet management system. Exposes tools via the Model Context Protocol (MCP) over HTTP, compatible with OpenAI Apps SDK and any MCP client.
+Local MCP server for a car rental fleet management system **+ AI Chat Hub**. Exposes tools via the Model Context Protocol (MCP) over HTTP, compatible with OpenAI Apps SDK and any MCP client. The integrated AI Chat Hub provides a free, instant chat interface powered by multiple cloud AI providers.
 
-**Free to run locally** — SQLite for storage, no paid APIs, no cloud dependencies.
+**Free to run locally** — SQLite for storage, free cloud AI models, no paid APIs, no cloud dependencies.
 
 > **OpenAI platform note:** Registering this server as an OpenAI App requires a **public HTTPS URL** and **domain verification**. The server itself costs nothing to run, but you need a way to expose it to the internet (see [Exposing Your Server](#exposing-your-server) below).
+
+---
+
+## Features
+
+- **MCP Server** — 6 fleet management tools via JSON-RPC
+- **AI Chat Hub** — ChatGPT-like interface with 10+ free AI models
+- **Smart Router** — auto-selects fastest available provider, auto-fallback on rate limits
+- **SSE Streaming** — instant token-by-token responses
+- **PWA** — installable on any device/OS from the browser
+- **Admin Panel** — manage models, API keys, and users
+- **Dashboard** — usage stats, provider health, token metrics
 
 ---
 
 ## Quick Start
 
 ```bash
+# 1. Server
 cd server
-cp ../.env.example ../.env   # Edit: set MCP_API_KEY to a random secret
+cp ../.env.example ../.env   # Edit: set MCP_API_KEY, JWT_SECRET, add AI provider keys
 npm install
 npm run build
 npm start
+
+# 2. Client (in a new terminal)
+cd client
+npm install
+npm run dev
 ```
 
-Open http://localhost:3030/health — you should see `{ "ok": true, ... }`.
+- Server: http://localhost:3030/health
+- Client: http://localhost:3001
+- First signup → becomes **owner** (full admin access)
+
+## AI Providers (all free tiers)
+
+| Provider | Models | Speed | Get Key |
+|----------|--------|-------|---------|
+| **Cerebras** | Llama 3.3 70B | ~2000 tok/s | [cloud.cerebras.ai](https://cloud.cerebras.ai/) |
+| **Groq** | Llama 3.3 70B, 3.1 8B, Mixtral | Instant | [console.groq.com/keys](https://console.groq.com/keys) |
+| **Google Gemini** | Gemini 2.0 Flash, Thinking | Fast | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
+| **Together.ai** | Llama 3.1 70B | Fast | [api.together.xyz](https://api.together.xyz/settings/api-keys) |
+| **Mistral** | Mistral Small | Fast | [console.mistral.ai](https://console.mistral.ai/api-keys/) |
+| **OpenRouter** | Llama 3.1 8B (free) | Fast | [openrouter.ai/keys](https://openrouter.ai/keys) |
+| **SambaNova** | Llama 3.1 405B | Medium | [cloud.sambanova.ai](https://cloud.sambanova.ai/) |
+
+Add keys in `.env` or at runtime via **Admin → API Keys**. You don't need all — the router auto-selects from available providers.
 
 ## Endpoints
 
@@ -27,6 +61,15 @@ Open http://localhost:3030/health — you should see `{ "ok": true, ... }`.
 | GET | `/health` | No | Health check |
 | POST | `/mcp` | `x-api-key` | MCP JSON-RPC (tools/list, tools/call) |
 | GET | `/.well-known/mcp-verification.txt` | No | Domain verification for OpenAI |
+| POST | `/api/v1/auth/signup` | No | Create account |
+| POST | `/api/v1/auth/login` | No | Login → JWT |
+| GET | `/api/v1/auth/me` | JWT | Current user |
+| POST | `/api/v1/chat/stream` | JWT | SSE streaming chat |
+| GET | `/api/v1/chat/conversations` | JWT | List conversations |
+| GET | `/api/v1/models` | JWT | Available AI models |
+| GET | `/api/v1/providers/health` | JWT | Provider status |
+| GET | `/api/v1/stats` | JWT | Usage statistics |
+| * | `/api/v1/admin/*` | JWT + Admin | Users, API keys, audit log |
 
 ## MCP Tools
 
@@ -46,8 +89,17 @@ Open http://localhost:3030/health — you should see `{ "ok": true, ... }`.
 | `PORT` | `3030` | HTTP port |
 | `MCP_API_KEY` | _(empty)_ | Required in `api_key` mode |
 | `AUTH_MODE` | `api_key` | `api_key` or `no_auth` |
+| `JWT_SECRET` | `dev-secret...` | JWT signing secret (change in production!) |
 | `DB_PATH` | `./data/app.db` | SQLite database file |
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
+| `CLIENT_ORIGIN` | `http://localhost:3001` | CORS origin for client |
+| `GROQ_API_KEY` | _(empty)_ | Groq provider key |
+| `GEMINI_API_KEY` | _(empty)_ | Google Gemini key |
+| `CEREBRAS_API_KEY` | _(empty)_ | Cerebras key |
+| `SAMBANOVA_API_KEY` | _(empty)_ | SambaNova key |
+| `TOGETHER_API_KEY` | _(empty)_ | Together.ai key |
+| `OPENROUTER_API_KEY` | _(empty)_ | OpenRouter key |
+| `MISTRAL_API_KEY` | _(empty)_ | Mistral key |
 
 ## Auth
 
@@ -107,7 +159,7 @@ Requires a **public HTTPS URL** (see [Exposing Your Server](#exposing-your-serve
 
 ## Database
 
-SQLite with WAL mode. Tables: `vehicles`, `washes`, `sales`, `audit_log`.
+SQLite with WAL mode. Tables: `vehicles`, `washes`, `sales`, `audit_log`, `users`, `conversations`, `messages`, `api_keys`, `prompt_templates`, `usage_log`.
 
 Seed demo data:
 ```bash
@@ -164,6 +216,23 @@ For true 24/7 availability, run on a device without a lid (Mac Mini, Raspberry P
 
 ---
 
+## Testing
+
+Server unit tests use **vitest**:
+
+```bash
+cd server
+npm test          # single run
+npm run test:watch # watch mode
+```
+
+Client lint:
+
+```bash
+cd client
+npm run lint
+```
+
 ## Smoke Test
 
 Start the server, then:
@@ -191,27 +260,48 @@ This verifies: health endpoint, MCP tools/list, tools/call, auth, and verificati
 
 ```
 mcp-car-rental/
+├── .editorconfig             # Editor formatting rules
 ├── .env.example              # Environment template
 ├── .gitignore
 ├── SECURITY.md               # Security & code scanning policy
 ├── .github/workflows/
+│   ├── ci.yml                # CI: install → lint → test → build
 │   └── codeql.yml            # CodeQL Code Scanning workflow
 ├── knowledge/                # Markdown files for knowledge_search tool
 │   └── policies.md
 ├── org/                      # Org-wide templates
 │   ├── _org_checklist.md     # Onboarding checklist for new repos
 │   └── reusable-codeql.yml   # Reusable CodeQL workflow (workflow_call)
+├── client/                   # Next.js 14 web app (AI Chat Hub)
+│   ├── package.json
+│   ├── next.config.ts
+│   ├── tailwind.config.ts
+│   ├── public/
+│   │   ├── manifest.json     # PWA manifest
+│   │   └── sw.js             # Service worker
+│   └── src/
+│       ├── app/              # App Router pages
+│       │   ├── layout.tsx    # Root layout + meta
+│       │   ├── login/        # Auth pages
+│       │   ├── signup/
+│       │   └── (app)/        # Protected pages
+│       │       ├── chat/     # AI chat interface
+│       │       ├── dashboard/# Usage stats
+│       │       ├── admin/    # Model/user/key mgmt
+│       │       ├── settings/ # User preferences
+│       │       └── install/  # PWA install guide
+│       ├── components/       # React components
+│       ├── stores/           # Zustand state
+│       ├── hooks/            # Custom hooks (PWA, etc.)
+│       ├── lib/              # API client, utils
+│       └── types/            # Shared TypeScript types
 ├── public/
 │   └── .well-known/
 │       └── mcp-verification.txt
-├── ops/cloudflare/           # Cloudflare Tunnel setup
-│   ├── setup.md              # Step-by-step guide (quick + named tunnel)
-│   └── config.example.yml    # Named tunnel config template
-├── ops/macos/                # launchd service files
-│   ├── com.kostas.mcp-car-rental.plist
-│   ├── install.sh
-│   └── uninstall.sh
-├── ops/openai-form-pack.md   # OpenAI registration form fill guide
+├── ops/                      # Deployment & operations
+│   ├── cloudflare/           # Tunnel setup
+│   ├── macos/                # launchd service
+│   └── openai-form-pack.md   # OpenAI registration guide
 └── server/
     ├── package.json
     ├── tsconfig.json
@@ -220,12 +310,25 @@ mcp-car-rental/
         ├── config.ts          # Env validation (Zod)
         ├── logger.ts          # Structured JSON logger
         ├── smoke.ts           # Smoke test script
+        ├── api/
+        │   └── routes.ts      # REST API (auth, models, admin, stats)
         ├── auth/
-        │   └── middleware.ts   # x-api-key guard
+        │   ├── middleware.ts   # x-api-key + JWT guards
+        │   └── jwt.ts         # JWT sign/verify + user CRUD
+        ├── chat/
+        │   ├── routes.ts      # Chat endpoints + SSE streaming
+        │   └── service.ts     # Conversation/message CRUD
         ├── db/
         │   ├── connection.ts  # SQLite singleton
-        │   ├── schema.ts      # Table definitions
+        │   ├── schema.ts      # All table definitions
         │   └── seed.ts        # Demo data
+        ├── llm/
+        │   ├── router.ts      # Smart AI router (auto-fallback)
+        │   ├── types.ts       # LLM type definitions
+        │   └── providers/
+        │       ├── catalog.ts          # Provider & model registry
+        │       ├── openai-compatible.ts # Groq/Cerebras/Together/etc.
+        │       └── gemini.ts           # Google Gemini adapter
         ├── mcp/
         │   ├── server.ts      # MCP Server factory
         │   └── routes.ts      # POST /mcp Express router
@@ -269,6 +372,81 @@ cd server && MCP_API_KEY=YOUR_KEY npm run smoke
 launchctl print gui/$(id -u)/com.kostas.mcp-car-rental
 tail -5 ~/Library/Logs/mcp-car-rental/out.log
 ```
+
+---
+
+## Quality Gates & Autofix
+
+### TL;DR
+
+Every PR goes through: **CI** (install → lint → test → build for server & client) + **CodeQL scan** → **Copilot Autofix** suggestions → required status checks must pass before merge. Weekly scans catch drift. Sentry Copilot + Docker Copilot are optional but recommended.
+
+- CI workflow: [.github/workflows/ci.yml](.github/workflows/ci.yml)
+
+### Code Scanning (CodeQL)
+
+- Runs on every PR and weekly (Monday 03:00 UTC)
+- Workflow: [.github/workflows/codeql.yml](.github/workflows/codeql.yml)
+- Alerts appear as PR annotations and in **Security → Code scanning alerts**
+- **Copilot Autofix** may suggest patches directly on alerts — always review before accepting
+
+### Sentry Copilot Extension
+
+1. Install **Sentry for GitHub Copilot** from VS Code Marketplace
+2. Connect to your Sentry project via extension settings
+3. In Copilot Chat, use:
+   - `@sentry What are the most recent unresolved errors?`
+   - `@sentry Suggest a fix for issue PROJ-1234`
+   - `@sentry Generate unit tests for the fix in commit abc123`
+
+### Docker Copilot
+
+1. Install **Docker for GitHub Copilot** from VS Code Marketplace
+2. Use prompts like:
+   - `@docker Optimize this Dockerfile for smaller image size`
+   - `@docker Add a healthcheck to my Compose service`
+   - `@docker Scan this image for vulnerabilities`
+
+### Branch Protection (Required Status Checks)
+
+1. Go to **Settings → Branches → Branch protection rule** for `main`
+2. Enable **Require status checks to pass before merging**
+3. Add required checks: `code-scanning`, `Server (install → build → test)`, `Client (install → lint → build)`
+4. Enable **Enforce for admins**
+
+**GH CLI shortcut:**
+
+```bash
+gh api \
+  -X PUT \
+  -H "Accept: application/vnd.github+json" \
+  /repos/<OWNER>/<REPO>/branches/main/protection \
+  -f required_status_checks[strict]=true \
+  -f 'required_status_checks[contexts][]=code-scanning' \
+  -f 'required_status_checks[contexts][]=Server (install → build → test)' \
+  -f 'required_status_checks[contexts][]=Client (install → lint → build)' \
+  -f enforce_admins=true \
+  -f restrictions=
+```
+
+### Org-wide Templates
+
+- [org/reusable-codeql.yml](org/reusable-codeql.yml) — reusable CodeQL workflow (`workflow_call`)
+- [org/_org_checklist.md](org/_org_checklist.md) — onboarding checklist for new repos
+
+Place the reusable workflow in your org repo `<OWNER>/.github/.github/workflows/reusable-codeql.yml` and call it from each repo's CI.
+
+---
+
+## PWA Installation
+
+The web client is a **Progressive Web App**. To install on any device:
+
+1. Open the app in a browser
+2. Navigate to **Install** in the sidebar
+3. Click **Install App** (or follow browser-specific instructions shown on the page)
+
+Works on: Chrome, Edge, Safari (iOS 16+), Android. Installed app works offline (cached assets) and launches like a native app.
 
 ---
 

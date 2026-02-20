@@ -5,6 +5,22 @@
 
 ---
 
+## Current Deployment (last verified 2026-02-20)
+
+| Field | Value |
+|---|---|
+| **Public URL** | `https://mel-resolve-heavy-perry.trycloudflare.com` |
+| **MCP endpoint** | `https://mel-resolve-heavy-perry.trycloudflare.com/mcp` |
+| **Auth mode** | `api_key` (header `x-api-key`) |
+| **API key** | `test-key-12345` |
+| **Verification token** | `50VwplddJwV-1SkQetDu0KZeC9AR1eLj_obv0JyRSSg` |
+| **Tools discovered** | 6 (`fleet_list_vehicles`, `fleet_update_status`, `wash_log_create`, `sales_log_create`, `report_daily_summary`, `knowledge_search`) |
+| **Tunnel type** | Quick tunnel (URL changes on restart) |
+
+> **Note:** Quick tunnel URLs change every time `cloudflared` restarts. Update the MCP Server URL in the OpenAI form after each tunnel restart, or migrate to a named tunnel for a stable domain.
+
+---
+
 ## Prerequisites
 
 | Requirement | How |
@@ -23,25 +39,26 @@
 ### 1. MCP Server URL
 
 ```
-https://<YOUR_PUBLIC_HOSTNAME>/mcp
+https://mel-resolve-heavy-perry.trycloudflare.com/mcp
 ```
 
 Examples:
 
 | Tunnel type | URL |
 |---|---|
-| Quick tunnel | `https://random-words-here.trycloudflare.com/mcp` |
+| Quick tunnel (current) | `https://mel-resolve-heavy-perry.trycloudflare.com/mcp` |
 | Named tunnel + custom domain | `https://mcp.yourdomain.com/mcp` |
 | **NOT valid** | `http://localhost:3030/mcp` — no HTTPS, not reachable by OpenAI |
 
 ### 2. Auth
 
-| Your `.env` `AUTH_MODE` | OpenAI dropdown | What to enter |
-|---|---|---|
-| `no_auth` | **No Auth** | Nothing else needed |
-| `api_key` | **Custom header** | Header: `x-api-key`  •  Value: your `MCP_API_KEY` from `.env` |
+| Setting | Value |
+|---|---|
+| OpenAI dropdown | **Custom header** |
+| Header name | `x-api-key` |
+| Header value | `test-key-12345` |
 
-> The OpenAI form may show "API Key" or "Custom header" — either works. The critical part is that the header name is `x-api-key` and the value matches `MCP_API_KEY` in your `.env`.
+> The server enforces `AUTH_MODE=api_key` from `.env`. The header name **must** be `x-api-key` and the value must match `MCP_API_KEY` in `.env`.
 
 ### 3. Scan Tools
 
@@ -91,38 +108,57 @@ Expected result: **6 tools discovered**:
 
 Run these **before** clicking Scan Tools / Verify Domain to catch problems early.
 
-Replace `YOUR_HOST` with your public hostname (e.g., `random-words.trycloudflare.com`)
-and `YOUR_KEY` with your `MCP_API_KEY`.
-
 ```bash
+HOST=mel-resolve-heavy-perry.trycloudflare.com
+KEY=test-key-12345
+
 # 1. Health (should return {"ok":true,...})
-curl -s https://YOUR_HOST/health
+curl -s https://$HOST/health
 
 # 2. Verification token (should return exact token, plain text)
-curl -s https://YOUR_HOST/.well-known/mcp-verification.txt
+curl -s https://$HOST/.well-known/mcp-verification.txt
 
 # 3. Auth enforcement (should return 401 if AUTH_MODE=api_key)
-curl -s -o /dev/null -w '%{http_code}' -X POST https://YOUR_HOST/mcp \
+curl -s -o /dev/null -w '%{http_code}' -X POST https://$HOST/mcp \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
 
 # 4. tools/list — should return 6 tool names
-curl -s --max-time 5 -X POST https://YOUR_HOST/mcp \
+curl -s --max-time 5 -X POST https://$HOST/mcp \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json, text/event-stream' \
-  -H 'x-api-key: YOUR_KEY' \
+  -H "x-api-key: $KEY" \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' \
   | grep -o '"name":"[^"]*"'
 
 # 5. tools/call — should return vehicle data
-curl -s --max-time 5 -X POST https://YOUR_HOST/mcp \
+curl -s --max-time 5 -X POST https://$HOST/mcp \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json, text/event-stream' \
-  -H 'x-api-key: YOUR_KEY' \
+  -H "x-api-key: $KEY" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"fleet_list_vehicles","arguments":{}}}'
 ```
 
-For **local testing** (before the tunnel), replace `https://YOUR_HOST` with `http://localhost:3030`.
+For **local testing** (before the tunnel), replace `https://$HOST` with `http://localhost:3030`.
+
+---
+
+## REST API Endpoints (bonus — not MCP)
+
+The server also exposes a JWT-protected REST API for the web frontend at `/api/v1`:
+
+| Endpoint | Method | Auth | Description |
+|---|---|---|---|
+| `/api/v1/auth/signup` | POST | None | Create user account |
+| `/api/v1/auth/login` | POST | None | Login, returns JWT |
+| `/api/v1/auth/me` | GET | JWT | Current user info |
+| `/api/v1/chat` | POST | JWT | Send message, SSE stream response |
+| `/api/v1/models` | GET | JWT | List available AI models |
+| `/api/v1/providers` | GET | JWT | List AI providers & status |
+| `/api/v1/stats` | GET | JWT | Dashboard statistics |
+| `/api/v1/admin/keys` | GET/POST | JWT + admin | Manage API keys |
+
+> These are **not** part of the MCP registration — they power the web UI.
 
 ---
 
