@@ -5,8 +5,13 @@ Use this when you want a stable public HTTPS endpoint for OpenAI MCP without run
 ## 1. Create a Vercel project
 
 1. Import this repo in Vercel.
-2. Set **Root Directory** to `server`.
+2. Keep **Root Directory** as repo root (default), or set it to `server`.
 3. Keep framework preset as **Other**.
+
+This repo includes both:
+
+- `vercel.json` (repo root) for default-root deployments.
+- `server/vercel.json` for `server` root-directory deployments.
 
 ## 2. Configure environment variables
 
@@ -30,6 +35,20 @@ Deploy from Vercel UI, or with CLI from `server/`:
 
 ```bash
 vercel --prod
+```
+
+## 3.1 If you see `404: NOT_FOUND` after deploy
+
+This usually means Vercel deployed with no function routes.
+
+1. Open **Project Settings → General** and confirm Root Directory is either repo root or `server`.
+2. Open **Deployments → Latest deployment → Functions** and confirm one function exists:
+   - root mode: `server/api/index.ts`
+   - server mode: `api/index.ts`
+3. Redeploy:
+
+```bash
+vercel --prod --force
 ```
 
 ## 4. Verify endpoints
