@@ -1,7 +1,7 @@
 # OpenAI Platform — MCP Server Form Fill Pack
 
 > Step-by-step values for the OpenAI "MCP Server" registration form.
-> Assumes the server is already running and exposed via **Cloudflare Tunnel** (free).
+> Assumes the server is already reachable over public HTTPS via **Vercel** or **Cloudflare Tunnel**.
 
 ---
 
@@ -25,12 +25,12 @@
 
 | Requirement | How |
 |---|---|
-| Server running | `cd server && npm start` |
-| `cloudflared` installed | `brew install cloudflared` (macOS) or `winget install Cloudflare.cloudflared` (Windows) |
-| Public HTTPS URL | `cloudflared tunnel --url http://localhost:3030` (quick tunnel) or named tunnel — see [ops/cloudflare/setup.md](../cloudflare/setup.md) |
+| Public HTTPS URL | Vercel deploy (`../deploy/vercel.md`) or Cloudflare tunnel (`cloudflare/setup.md`) |
+| `cloudflared` installed (Cloudflare mode only) | `brew install cloudflared` (macOS) or `winget install Cloudflare.cloudflared` (Windows) |
+| Local server (Cloudflare mode only) | `cd server && npm start` |
 | Verification token | Provided by the OpenAI form (step 4 below) |
 
-> **`localhost` and LAN IPs cannot pass domain verification.** OpenAI must reach your server over the internet via HTTPS. Cloudflare Tunnel provides this for free.
+> **`localhost` and LAN IPs cannot pass domain verification.** OpenAI must reach your server over the internet via HTTPS.
 
 ---
 
@@ -46,6 +46,7 @@ Examples:
 
 | Tunnel type | URL |
 |---|---|
+| Vercel | `https://YOUR_APP.vercel.app/mcp` |
 | Quick tunnel (current) | `https://mel-resolve-heavy-perry.trycloudflare.com/mcp` |
 | Named tunnel + custom domain | `https://mcp.yourdomain.com/mcp` |
 | **NOT valid** | `http://localhost:3030/mcp` — no HTTPS, not reachable by OpenAI |

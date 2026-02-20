@@ -8,10 +8,12 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
 
+const defaultDbPath = process.env['VERCEL'] ? '/tmp/app.db' : './data/app.db';
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().min(1).max(65535).default(3030),
-  DB_PATH: z.string().default('./data/app.db'),
+  DB_PATH: z.string().default(defaultDbPath),
   MCP_API_KEY: z.string().default(''),
   AUTH_MODE: z.enum(['api_key', 'no_auth']).default('api_key'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),

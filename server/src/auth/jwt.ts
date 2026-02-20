@@ -34,6 +34,10 @@ export interface UserRow {
   updated_at: string;
 }
 
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 export function signToken(payload: JWTPayload): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES });
 }
@@ -52,8 +56,9 @@ export async function comparePassword(password: string, hash: string): Promise<b
 
 export async function signup(email: string, password: string, name: string): Promise<{ token: string; user: Omit<UserRow, 'password_hash'> }> {
   const db = getDb();
+  const normalizedEmail = normalizeEmail(email);
 
-  const exists = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+  const exists = db.prepare('SELECT id FROM users WHERE email = ?').get(normalizedEmail);
   if (exists) throw new Error('Email already registered');
 
   const id = uuid();
@@ -66,20 +71,21 @@ export async function signup(email: string, password: string, name: string): Pro
   db.prepare(`
     INSERT INTO users (id, email, password_hash, name, role)
     VALUES (?, ?, ?, ?, ?)
-  `).run(id, email.toLowerCase(), password_hash, name, role);
+  `).run(id, normalizedEmail, password_hash, name, role);
 
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id) as UserRow;
   const token = signToken({ userId: id, email: user.email, role: user.role });
 
   const { password_hash: _, ...safeUser } = user;
-  logger.info(`User signed up: ${email} (role=${role})`);
+  logger.info(`User signed up: ${normalizedEmail} (role=${role})`);
   return { token, user: safeUser };
 }
 
 export async function login(email: string, password: string): Promise<{ token: string; user: Omit<UserRow, 'password_hash'> }> {
   const db = getDb();
+  const normalizedEmail = normalizeEmail(email);
 
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase()) as UserRow | undefined;
+  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(normalizedEmail) as UserRow | undefined;
   if (!user) throw new Error('Invalid email or password');
 
   const valid = await comparePassword(password, user.password_hash);
@@ -88,7 +94,7 @@ export async function login(email: string, password: string): Promise<{ token: s
   const token = signToken({ userId: user.id, email: user.email, role: user.role });
   const { password_hash: _, ...safeUser } = user;
 
-  logger.info(`User logged in: ${email}`);
+  logger.info(`User logged in: ${normalizedEmail}`);
   return { token, user: safeUser };
 }
 
