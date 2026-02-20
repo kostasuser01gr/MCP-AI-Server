@@ -1,99 +1,96 @@
-/**
- * Unit tests for config.ts — env validation logic.
- */
-import { describe, it, expect } from 'vitest';
-import { z } from 'zod';
+import { describe, expect, it } from 'vitest';
+import { DEFAULT_JWT_SECRET, validateEnv } from './config.js';
 
-// Re-create the exact Zod schema from config.ts to test validation logic
-const trimIfString = (value: unknown) => typeof value === 'string' ? value.trim() : value;
-const envSchema = z.object({
-  NODE_ENV: z.preprocess(trimIfString, z.enum(['development', 'production', 'test']).default('development')),
-  PORT: z.coerce.number().min(1).max(65535).default(3030),
-  DB_PATH: z.preprocess(trimIfString, z.string().default('./data/app.db')),
-  MCP_API_KEY: z.preprocess(trimIfString, z.string().default('')),
-  AUTH_MODE: z.preprocess(trimIfString, z.enum(['api_key', 'no_auth']).default('api_key')),
-  LOG_LEVEL: z.preprocess(trimIfString, z.enum(['debug', 'info', 'warn', 'error']).default('info')),
-});
-
-describe('envSchema validation', () => {
+describe('validateEnv', () => {
   it('applies defaults for empty env', () => {
-    const result = envSchema.safeParse({});
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.PORT).toBe(3030);
-      expect(result.data.AUTH_MODE).toBe('api_key');
-      expect(result.data.LOG_LEVEL).toBe('info');
-      expect(result.data.NODE_ENV).toBe('development');
-      expect(result.data.DB_PATH).toBe('./data/app.db');
-      expect(result.data.MCP_API_KEY).toBe('');
-    }
+    const result = validateEnv({});
+    expect(result.PORT).toBe(3030);
+    expect(result.AUTH_MODE).toBe('api_key');
+    expect(result.LOG_LEVEL).toBe('info');
+    expect(result.NODE_ENV).toBe('development');
+    expect(result.DB_PATH).toBe('./data/app.db');
+    expect(result.MCP_API_KEY).toBe('');
+    expect(result.JWT_SECRET).toBe(DEFAULT_JWT_SECRET);
+    expect(result.CLIENT_ORIGIN).toBe('http://localhost:3001');
+    expect(result.MCP_VERIFICATION_TOKEN).toBe('');
   });
 
-  it('coerces string PORT to number', () => {
-    const result = envSchema.safeParse({ PORT: '8080' });
-    expect(result.success).toBe(true);
-    if (result.success) expect(result.data.PORT).toBe(8080);
+  it('coerces and trims env values', () => {
+    const result = validateEnv({
+      PORT: '8080',
+      AUTH_MODE: 'api_key\n',
+      LOG_LEVEL: 'warn\n',
+      MCP_API_KEY: '  secret-key  ',
+      DB_PATH: '  /tmp/app.db  ',
+      JWT_SECRET: '  strong-secret  ',
+      CLIENT_ORIGIN: ' https://app.example.com ',
+      MCP_VERIFICATION_TOKEN: ' token-123 ',
+    });
+    expect(result.PORT).toBe(8080);
+    expect(result.AUTH_MODE).toBe('api_key');
+    expect(result.LOG_LEVEL).toBe('warn');
+    expect(result.MCP_API_KEY).toBe('secret-key');
+    expect(result.DB_PATH).toBe('/tmp/app.db');
+    expect(result.JWT_SECRET).toBe('strong-secret');
+    expect(result.CLIENT_ORIGIN).toBe('https://app.example.com');
+    expect(result.MCP_VERIFICATION_TOKEN).toBe('token-123');
   });
 
-  it('rejects PORT out of range', () => {
-    const result = envSchema.safeParse({ PORT: '0' });
-    expect(result.success).toBe(false);
+  it('rejects invalid PORT and enum values', () => {
+    expect(() => validateEnv({ PORT: '0' })).toThrow('Invalid environment variables');
+    expect(() => validateEnv({ PORT: '70000' })).toThrow('Invalid environment variables');
+    expect(() => validateEnv({ AUTH_MODE: 'bearer' })).toThrow('Invalid environment variables');
+    expect(() => validateEnv({ LOG_LEVEL: 'verbose' })).toThrow('Invalid environment variables');
+    expect(() => validateEnv({ NODE_ENV: 'staging' })).toThrow('Invalid environment variables');
   });
 
-  it('rejects PORT > 65535', () => {
-    const result = envSchema.safeParse({ PORT: '70000' });
-    expect(result.success).toBe(false);
+  it('fails fast in production when AUTH_MODE=api_key and MCP_API_KEY is missing', () => {
+    expect(() => validateEnv({
+      NODE_ENV: 'production',
+      AUTH_MODE: 'api_key',
+      JWT_SECRET: 'super-secret',
+      MCP_API_KEY: '',
+    })).toThrow('MCP_API_KEY is required when AUTH_MODE=api_key in production');
   });
 
-  it('rejects invalid AUTH_MODE', () => {
-    const result = envSchema.safeParse({ AUTH_MODE: 'bearer' });
-    expect(result.success).toBe(false);
+  it('fails fast in production when API key is placeholder-like', () => {
+    expect(() => validateEnv({
+      NODE_ENV: 'production',
+      AUTH_MODE: 'api_key',
+      JWT_SECRET: 'super-secret',
+      MCP_API_KEY: 'change-me-now',
+    })).toThrow('MCP_API_KEY must not use placeholder/example values in production');
   });
 
-  it('accepts valid AUTH_MODE values', () => {
-    expect(envSchema.safeParse({ AUTH_MODE: 'api_key' }).success).toBe(true);
-    expect(envSchema.safeParse({ AUTH_MODE: 'no_auth' }).success).toBe(true);
+  it('fails fast in production when JWT secret is default or placeholder', () => {
+    expect(() => validateEnv({
+      NODE_ENV: 'production',
+      AUTH_MODE: 'no_auth',
+      JWT_SECRET: DEFAULT_JWT_SECRET,
+    })).toThrow('JWT_SECRET must be set to a strong value in production');
+
+    expect(() => validateEnv({
+      NODE_ENV: 'production',
+      AUTH_MODE: 'no_auth',
+      JWT_SECRET: 'change-me-secret',
+    })).toThrow('JWT_SECRET must not use placeholder/example values in production');
   });
 
-  it('rejects invalid LOG_LEVEL', () => {
-    const result = envSchema.safeParse({ LOG_LEVEL: 'verbose' });
-    expect(result.success).toBe(false);
-  });
-
-  it('rejects invalid NODE_ENV', () => {
-    const result = envSchema.safeParse({ NODE_ENV: 'staging' });
-    expect(result.success).toBe(false);
-  });
-
-  it('accepts full valid config', () => {
-    const result = envSchema.safeParse({
+  it('accepts valid production config', () => {
+    const result = validateEnv({
       NODE_ENV: 'production',
       PORT: '3030',
-      DB_PATH: '/var/data/app.db',
-      MCP_API_KEY: 'my-secret-key',
+      DB_PATH: '/tmp/app.db',
       AUTH_MODE: 'api_key',
-      LOG_LEVEL: 'warn',
+      MCP_API_KEY: 'live-key-12345',
+      JWT_SECRET: 'live-jwt-secret-12345',
+      CLIENT_ORIGIN: 'https://mcp-car-rental.vercel.app',
+      LOG_LEVEL: 'info',
     });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.NODE_ENV).toBe('production');
-      expect(result.data.MCP_API_KEY).toBe('my-secret-key');
-    }
-  });
 
-  it('trims whitespace around enum/string env values', () => {
-    const result = envSchema.safeParse({
-      AUTH_MODE: 'api_key\n',
-      LOG_LEVEL: 'info\n',
-      MCP_API_KEY: '  key-123  ',
-      DB_PATH: '  /tmp/app.db  ',
-    });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.AUTH_MODE).toBe('api_key');
-      expect(result.data.LOG_LEVEL).toBe('info');
-      expect(result.data.MCP_API_KEY).toBe('key-123');
-      expect(result.data.DB_PATH).toBe('/tmp/app.db');
-    }
+    expect(result.NODE_ENV).toBe('production');
+    expect(result.AUTH_MODE).toBe('api_key');
+    expect(result.MCP_API_KEY).toBe('live-key-12345');
+    expect(result.JWT_SECRET).toBe('live-jwt-secret-12345');
   });
 });

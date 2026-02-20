@@ -1,79 +1,88 @@
-# Deploy MCP Server on Vercel
+# Deploy MCP/API on Vercel (Root-Only)
 
-Use this when you want a stable public HTTPS endpoint for OpenAI MCP without running your own tunnel process.
+This project deploys the **MCP/API server only** on Vercel.
+The Next.js client is out of scope for this Vercel project.
 
-## 1. Create a Vercel project
+## 1. Project shape (required)
 
-1. Import this repo in Vercel.
-2. Keep **Root Directory** as repo root (default), or set it to `server`.
-3. Keep framework preset as **Other**.
+Deploy from repo root (`Root Directory = .`) using:
 
-This repo includes both:
+- `vercel.json` (root)
+- `api/index.ts` (root)
+- root `package.json` with `vercel-build`
 
-- `vercel.json` + `api/index.ts` (repo root) for default-root deployments.
-- `server/vercel.json` for `server` root-directory deployments.
-- `package.json` (repo root) to run `vercel-build` and install/build `server/` dependencies during root-mode deployments.
+Do not deploy from `server/`.
 
 ## 2. Configure environment variables
 
-Set these in Vercel Project Settings → Environment Variables:
+Set these in Vercel Project Settings -> Environment Variables:
 
-- `MCP_API_KEY` = strong random value
-- `AUTH_MODE` = `api_key`
-- `JWT_SECRET` = long random value
-- `MCP_VERIFICATION_TOKEN` = token from OpenAI MCP form
-- `DB_PATH` = `/tmp/app.db`
-- `CLIENT_ORIGIN` = your client URL (optional for MCP-only usage)
+- `MCP_API_KEY` (required in production when `AUTH_MODE=api_key`)
+- `AUTH_MODE=api_key`
+- `JWT_SECRET` (required in production, non-placeholder)
+- `MCP_VERIFICATION_TOKEN` (from OpenAI form)
+- `DB_PATH=/tmp/app.db`
+- `CLIENT_ORIGIN=https://mcp-car-rental.vercel.app` (or your own client domain)
+- `LOG_LEVEL=info`
 
 Notes:
 
-- `DB_PATH=/tmp/app.db` is required for Vercel serverless runtime.
-- `/tmp` is ephemeral. Data can reset after cold starts/redeploys.
+- `DB_PATH=/tmp/app.db` is required for serverless filesystem constraints.
+- `/tmp` is ephemeral on Vercel.
 
-## 3. Deploy
+## 3. Deployment protection policy (critical)
 
-Deploy from Vercel UI, or with CLI from `server/`:
+OpenAI MCP scanning and remote clients require a publicly reachable URL.
+
+In Vercel Project Settings, disable Vercel Authentication for:
+
+- Production deployment URLs
+- Production aliases
+
+If your org policy requires protection on deployment URLs, use the canonical public alias only (for example `https://mcp-car-rental.vercel.app`) and do not use deployment-specific URLs in OpenAI.
+
+## 4. Deploy
+
+From repo root:
 
 ```bash
 vercel --prod
 ```
 
-## 3.1 If you see `404: NOT_FOUND` after deploy
-
-This usually means Vercel deployed with no function routes.
-
-1. Open **Project Settings → General** and confirm Root Directory is either repo root or `server`.
-2. Open **Deployments → Latest deployment → Functions** and confirm one function exists:
-   - root mode: `api/index.ts`
-   - server mode: `api/index.ts`
-3. Redeploy:
-
-```bash
-vercel --prod --force
-```
-
-## 4. Verify endpoints
+## 5. Verify endpoints
 
 Replace `YOUR_APP.vercel.app`:
 
 ```bash
-curl -s https://YOUR_APP.vercel.app/health
-curl -s https://YOUR_APP.vercel.app/.well-known/mcp-verification.txt
-curl -s -X POST https://YOUR_APP.vercel.app/mcp \
+curl -si https://YOUR_APP.vercel.app/health
+curl -si https://YOUR_APP.vercel.app/.well-known/mcp-verification.txt
+curl -si -X POST https://YOUR_APP.vercel.app/mcp \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json, text/event-stream' \
   -H 'x-api-key: YOUR_MCP_API_KEY' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
 ```
 
-## 5. OpenAI MCP form values
+Expected:
 
-- **MCP Server URL**: `https://YOUR_APP.vercel.app/mcp`
-- **Auth**: Custom header
-- **Header name**: `x-api-key`
-- **Header value**: the exact `MCP_API_KEY` from Vercel env vars
+- `/health` -> `200`
+- `/.well-known/mcp-verification.txt` -> `200` with exact token
+- `/mcp` with valid key -> `200` JSON-RPC response
 
-## 6. Important limitation
+## 6. OpenAI MCP form values
 
-This project currently uses SQLite. On Vercel serverless, SQLite state is not durable.
-For production persistence, move to a managed database and update storage logic.
+- MCP Server URL: `https://YOUR_APP.vercel.app/mcp`
+- Auth: Custom header
+- Header name: `x-api-key`
+- Header value: same as `MCP_API_KEY`
+
+## 7. Troubleshooting
+
+- `401 Authentication Required` on alias URL:
+  - You are hitting a protected Vercel alias. Use canonical public alias or disable protection.
+- `404 NOT_FOUND`:
+  - Check root `vercel.json`, root `api/index.ts`, and root directory set to `.`
+- `FUNCTION_INVOCATION_FAILED`:
+  - Check Vercel runtime logs and validate production env vars.
+- `No tools found` in OpenAI:
+  - Verify URL is `/mcp`, `x-api-key` matches, and endpoint is publicly reachable.
