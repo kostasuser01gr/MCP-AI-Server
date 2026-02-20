@@ -23,8 +23,17 @@ export function getDb(): Database.Database {
     logger.warn('Adjusted DB path for serverless runtime', { requestedPath, dbPath });
   }
 
-  db = new Database(dbPath);
-  db.pragma('journal_mode = WAL');
+  db = new Database(dbPath, { timeout: 5000 });
+  db.pragma('busy_timeout = 5000');
+  if (!process.env['VERCEL']) {
+    try {
+      db.pragma('journal_mode = WAL');
+    } catch (error) {
+      logger.warn('Failed to enable WAL journal mode; continuing with default mode', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
   db.pragma('foreign_keys = ON');
   logger.info('Database connected', { path: dbPath });
   return db;
