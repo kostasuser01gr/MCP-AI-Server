@@ -9,14 +9,15 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
 
 const defaultDbPath = process.env['VERCEL'] ? '/tmp/app.db' : './data/app.db';
+const trimIfString = (value: unknown) => typeof value === 'string' ? value.trim() : value;
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  NODE_ENV: z.preprocess(trimIfString, z.enum(['development', 'production', 'test']).default('development')),
   PORT: z.coerce.number().min(1).max(65535).default(3030),
-  DB_PATH: z.string().default(defaultDbPath),
-  MCP_API_KEY: z.string().default(''),
-  AUTH_MODE: z.enum(['api_key', 'no_auth']).default('api_key'),
-  LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+  DB_PATH: z.preprocess(trimIfString, z.string().default(defaultDbPath)),
+  MCP_API_KEY: z.preprocess(trimIfString, z.string().default('')),
+  AUTH_MODE: z.preprocess(trimIfString, z.enum(['api_key', 'no_auth']).default('api_key')),
+  LOG_LEVEL: z.preprocess(trimIfString, z.enum(['debug', 'info', 'warn', 'error']).default('info')),
 });
 
 const parsed = envSchema.safeParse(process.env);
