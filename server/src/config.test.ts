@@ -5,13 +5,14 @@ import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
 
 // Re-create the exact Zod schema from config.ts to test validation logic
+const trimIfString = (value: unknown) => typeof value === 'string' ? value.trim() : value;
 const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  NODE_ENV: z.preprocess(trimIfString, z.enum(['development', 'production', 'test']).default('development')),
   PORT: z.coerce.number().min(1).max(65535).default(3030),
-  DB_PATH: z.string().default('./data/app.db'),
-  MCP_API_KEY: z.string().default(''),
-  AUTH_MODE: z.enum(['api_key', 'no_auth']).default('api_key'),
-  LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+  DB_PATH: z.preprocess(trimIfString, z.string().default('./data/app.db')),
+  MCP_API_KEY: z.preprocess(trimIfString, z.string().default('')),
+  AUTH_MODE: z.preprocess(trimIfString, z.enum(['api_key', 'no_auth']).default('api_key')),
+  LOG_LEVEL: z.preprocess(trimIfString, z.enum(['debug', 'info', 'warn', 'error']).default('info')),
 });
 
 describe('envSchema validation', () => {
@@ -77,6 +78,22 @@ describe('envSchema validation', () => {
     if (result.success) {
       expect(result.data.NODE_ENV).toBe('production');
       expect(result.data.MCP_API_KEY).toBe('my-secret-key');
+    }
+  });
+
+  it('trims whitespace around enum/string env values', () => {
+    const result = envSchema.safeParse({
+      AUTH_MODE: 'api_key\n',
+      LOG_LEVEL: 'info\n',
+      MCP_API_KEY: '  key-123  ',
+      DB_PATH: '  /tmp/app.db  ',
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.AUTH_MODE).toBe('api_key');
+      expect(result.data.LOG_LEVEL).toBe('info');
+      expect(result.data.MCP_API_KEY).toBe('key-123');
+      expect(result.data.DB_PATH).toBe('/tmp/app.db');
     }
   });
 });
