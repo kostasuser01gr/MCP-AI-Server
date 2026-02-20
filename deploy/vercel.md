@@ -10,8 +10,9 @@ Use this when you want a stable public HTTPS endpoint for OpenAI MCP without run
 
 This repo includes both:
 
-- `vercel.json` (repo root) for default-root deployments.
+- `vercel.json` + `api/index.ts` (repo root) for default-root deployments.
 - `server/vercel.json` for `server` root-directory deployments.
+- `package.json` (repo root) to run `vercel-build` and install/build `server/` dependencies during root-mode deployments.
 
 ## 2. Configure environment variables
 
@@ -43,7 +44,7 @@ This usually means Vercel deployed with no function routes.
 
 1. Open **Project Settings → General** and confirm Root Directory is either repo root or `server`.
 2. Open **Deployments → Latest deployment → Functions** and confirm one function exists:
-   - root mode: `server/api/index.ts`
+   - root mode: `api/index.ts`
    - server mode: `api/index.ts`
 3. Redeploy:
 

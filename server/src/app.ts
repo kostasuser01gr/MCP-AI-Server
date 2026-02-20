@@ -21,6 +21,7 @@ import './tools/knowledge.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.resolve(__dirname, '../../public');
+const clientOrigin = (process.env['CLIENT_ORIGIN'] || 'http://localhost:3001').trim();
 
 let bootstrapped = false;
 let cachedApp: express.Express | null = null;
@@ -64,7 +65,7 @@ export function getApp(): express.Express {
   const app = express();
 
   app.use(cors({
-    origin: process.env['CLIENT_ORIGIN'] || 'http://localhost:3001',
+    origin: clientOrigin,
     credentials: true,
   }));
   app.use(express.json({ limit: '2mb' }));

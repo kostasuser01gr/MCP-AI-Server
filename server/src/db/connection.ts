@@ -9,12 +9,18 @@ let db: Database.Database | null = null;
 export function getDb(): Database.Database {
   if (db) return db;
 
-  const dbPath = path.resolve(config.DB_PATH);
+  const requestedPath = path.resolve(config.DB_PATH);
+  // Vercel serverless filesystem is read-only under /var/task; keep SQLite in /tmp.
+  const dbPath = requestedPath.startsWith('/var/task/') ? '/tmp/app.db' : requestedPath;
   const dir = path.dirname(dbPath);
 
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
     logger.info('Created data directory', { path: dir });
+  }
+
+  if (dbPath !== requestedPath) {
+    logger.warn('Adjusted DB path for serverless runtime', { requestedPath, dbPath });
   }
 
   db = new Database(dbPath);
