@@ -1,5 +1,7 @@
 # Deploy MCP/API on Vercel (Root-Only)
 
+> Zero-charge guardrail: this guide changes hosted Vercel state. Do not run these commands unless deployment is explicitly approved and billing exposure is acceptable.
+
 This project deploys the **MCP/API server only** on Vercel.
 The Next.js client is out of scope for this Vercel project.
 
@@ -22,7 +24,7 @@ Set these in Vercel Project Settings -> Environment Variables:
 - `JWT_SECRET` (required in production, non-placeholder)
 - `MCP_VERIFICATION_TOKEN` (from OpenAI form)
 - `DB_PATH=/tmp/app.db`
-- `CLIENT_ORIGIN=https://mcp-car-rental.vercel.app` (or your own client domain)
+- `CLIENT_ORIGIN=https://YOUR_APP.vercel.app` (or your own client domain)
 - `LOG_LEVEL=info`
 
 Notes:
@@ -39,7 +41,7 @@ In Vercel Project Settings, disable Vercel Authentication for:
 - Production deployment URLs
 - Production aliases
 
-If your org policy requires protection on deployment URLs, use the canonical public alias only (for example `https://mcp-car-rental.vercel.app`) and do not use deployment-specific URLs in OpenAI.
+If your org policy requires protection on deployment URLs, use the canonical public alias only and do not use deployment-specific URLs in OpenAI.
 
 ## 4. Deploy
 
