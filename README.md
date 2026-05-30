@@ -1,7 +1,7 @@
 # MCP Car Rental
 
 [![CI](https://github.com/kostasuser01gr/MCP-AI-Server/actions/workflows/ci.yml/badge.svg)](https://github.com/kostasuser01gr/MCP-AI-Server/actions/workflows/ci.yml)
-[![Live Demo](https://img.shields.io/badge/Live_Demo-Vercel-black)](https://mcpserver-eight.vercel.app)
+[![Local First](https://img.shields.io/badge/Mode-Local_First-green)](#quick-start)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![MCP](https://img.shields.io/badge/Protocol-MCP-purple)](#)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org)
@@ -9,6 +9,8 @@
 Local MCP server for a car rental fleet management system **+ AI Chat Hub**. Exposes tools via the Model Context Protocol (MCP) over HTTP, compatible with OpenAI Apps SDK and any MCP client. The integrated AI Chat Hub provides a free, instant chat interface powered by multiple cloud AI providers.
 
 **Free to run locally** — SQLite for storage, free cloud AI models, no paid APIs, no cloud dependencies.
+
+> **Zero-charge mode:** This repository is local-first. Do not run deployment, linking, hosted secret, or platform project commands unless you explicitly approve hosted platform changes and any possible billing exposure.
 
 > **OpenAI platform note:** Registering this server as an OpenAI App requires a **public HTTPS URL** and **domain verification**. The server itself costs nothing to run, but you need a way to expose it to the internet (see [Exposing Your Server](#exposing-your-server) below).
 
@@ -118,20 +120,23 @@ For local development, set `AUTH_MODE=no_auth` in `.env` to skip auth.
 
 The server runs on `http://localhost:3030` by default. OpenAI MCP registration requires a **public HTTPS URL**.
 
+The options below can involve hosted platform state or third-party account limits. In zero-charge mode, keep the server local and do not run these commands without explicit approval.
+
 | Option | Cost | URL Stability | Best for |
 |------|------|---------------|----------|
 | **Vercel** | Free tier available | Stable | Managed hosting, no local tunnel process |
 | **Cloudflare Tunnel (quick)** | Free | Changes on restart | Fast local testing |
 | **Cloudflare Tunnel (named)** | Free | Stable | Self-hosting with your own domain |
 
-### Option A — Vercel (recommended for stable MCP endpoint)
+### Option A — Vercel (optional hosted endpoint)
 
 See [deploy/vercel.md](deploy/vercel.md).  
 Your OpenAI MCP URL will be: `https://YOUR_APP.vercel.app/mcp`.
 
 Important:
-- Use the canonical public production alias for OpenAI (for this project: `https://mcp-car-rental.vercel.app/mcp`).
+- Use a canonical public production alias you control.
 - Do not use deployment-specific or git aliases for OpenAI unless you intentionally disabled Vercel Authentication on those aliases.
+- Do not create or deploy a Vercel project in zero-charge mode.
 
 ### Option B — Cloudflare Tunnel (run locally + expose)
 
