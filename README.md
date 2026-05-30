@@ -1,5 +1,11 @@
 # MCP Car Rental
 
+[![CI](https://github.com/kostasuser01gr/MCP-AI-Server/actions/workflows/ci.yml/badge.svg)](https://github.com/kostasuser01gr/MCP-AI-Server/actions/workflows/ci.yml)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Vercel-black)](https://mcpserver-eight.vercel.app)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![MCP](https://img.shields.io/badge/Protocol-MCP-purple)](#)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org)
+
 Local MCP server for a car rental fleet management system **+ AI Chat Hub**. Exposes tools via the Model Context Protocol (MCP) over HTTP, compatible with OpenAI Apps SDK and any MCP client. The integrated AI Chat Hub provides a free, instant chat interface powered by multiple cloud AI providers.
 
 **Free to run locally** — SQLite for storage, free cloud AI models, no paid APIs, no cloud dependencies.
