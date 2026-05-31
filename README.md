@@ -10,6 +10,8 @@ Local MCP server for a car rental fleet management system **+ AI Chat Hub**. Exp
 
 **Free to run locally** — SQLite for storage, free cloud AI models, no paid APIs, no cloud dependencies.
 
+> **Live deployment status:** There is currently no verified public demo URL for this repository. If a GitHub homepage or README link points to an unrelated app, do not use it for OpenAI MCP registration.
+
 > **Zero-charge mode:** This repository is local-first. Do not run deployment, linking, hosted secret, or platform project commands unless you explicitly approve hosted platform changes and any possible billing exposure.
 
 > **OpenAI platform note:** Registering this server as an OpenAI App requires a **public HTTPS URL** and **domain verification**. The server itself costs nothing to run, but you need a way to expose it to the internet (see [Exposing Your Server](#exposing-your-server) below).
@@ -265,7 +267,7 @@ This verifies: health endpoint, MCP tools/list, tools/call, auth, and verificati
 | `npm run build` fails | Run `npm install` first. Check Node.js ≥ 20. |
 | Port 3030 in use | Set `PORT=3031` in `.env`, or kill the old process |
 | 401 on /mcp | Set `x-api-key` header, or use `AUTH_MODE=no_auth` |
-| 401 Authentication Required on `*.vercel.app` | Use canonical alias `mcp-car-rental.vercel.app`, or disable Vercel Authentication for production deployment URLs/aliases in Project Settings |
+| 401 Authentication Required on `*.vercel.app` | Use a canonical alias you control, or disable Vercel Authentication for production deployment URLs/aliases in Project Settings |
 | 404 NOT_FOUND on Vercel | Confirm root `vercel.json` + `api/index.ts` exist and project Root Directory is `.` |
 | `FUNCTION_INVOCATION_FAILED` on Vercel | Check runtime logs and verify required env vars (`MCP_API_KEY`, `JWT_SECRET`, `AUTH_MODE`, `DB_PATH`) are set correctly |
 | DB locked errors | Only one server process should access DB. Stop duplicates. |
