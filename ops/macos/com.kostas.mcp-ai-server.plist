@@ -5,7 +5,7 @@
 <dict>
 
   <key>Label</key>
-  <string>com.kostas.mcp-car-rental</string>
+  <string>com.kostas.mcp-ai-server</string>
 
   <key>ProgramArguments</key>
   <array>
@@ -38,10 +38,10 @@
   <integer>10</integer>
 
   <key>StandardOutPath</key>
-  <string>__HOME__/Library/Logs/mcp-car-rental/out.log</string>
+  <string>__HOME__/Library/Logs/mcp-ai-server/out.log</string>
 
   <key>StandardErrorPath</key>
-  <string>__HOME__/Library/Logs/mcp-car-rental/err.log</string>
+  <string>__HOME__/Library/Logs/mcp-ai-server/err.log</string>
 
 </dict>
 </plist>

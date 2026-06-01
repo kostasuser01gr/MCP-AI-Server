@@ -52,7 +52,7 @@ export function initSchema(): void {
       ts            TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
-    -- ══════════ AI Hub tables ══════════
+    -- ══════════ MCP AI Server tables ══════════
 
     CREATE TABLE IF NOT EXISTS users (
       id            TEXT PRIMARY KEY,

@@ -19,7 +19,7 @@ export default function InstallPage() {
           <h1 className="text-2xl font-bold">Install App</h1>
         </div>
         <p className="text-[var(--text-secondary)] text-sm mt-1">
-          Install AI Hub on your device for the best experience
+          Install MCP AI Server on your device for the best experience
         </p>
       </div>
 
@@ -53,7 +53,7 @@ export default function InstallPage() {
           <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-xl p-5 text-center">
             <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
             <h2 className="text-lg font-bold text-green-700 dark:text-green-400">
-              AI Hub is installed!
+              MCP AI Server is installed!
             </h2>
             <p className="text-sm text-green-600 dark:text-green-500 mt-1">
               You&apos;re running the app in standalone mode. It works offline too!
@@ -142,7 +142,7 @@ function InstallInstructions({ os, browser }: { os: string; browser: string }) {
         <li>1. Tap the <strong>Share</strong> button (square with arrow) in Safari</li>
         <li>2. Scroll down and tap <strong>&quot;Add to Home Screen&quot;</strong></li>
         <li>3. Tap <strong>&quot;Add&quot;</strong> in the top right</li>
-        <li>4. AI Hub will appear as an app on your home screen!</li>
+        <li>4. MCP AI Server will appear as an app on your home screen!</li>
       </ol>
     );
   }
@@ -151,7 +151,7 @@ function InstallInstructions({ os, browser }: { os: string; browser: string }) {
     return (
       <ol className="space-y-2 text-sm text-[var(--text-secondary)]">
         <li>1. Click the <strong>install icon</strong> (⊕) in the address bar</li>
-        <li>2. Or click the <strong>three dots menu (⋮)</strong> → <strong>&quot;Install AI Hub&quot;</strong></li>
+        <li>2. Or click the <strong>three dots menu (⋮)</strong> → <strong>&quot;Install MCP AI Server&quot;</strong></li>
         <li>3. The app will open in its own window with a desktop/dock icon</li>
       </ol>
     );

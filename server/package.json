@@ -1,8 +1,8 @@
 {
-  "name": "mcp-car-rental-server",
+  "name": "mcp-ai-server",
   "version": "1.0.0",
   "type": "module",
-  "description": "MCP Car Rental – remote MCP server over HTTP",
+  "description": "MCP AI Server - remote MCP server over HTTP",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",

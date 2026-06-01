@@ -29,7 +29,7 @@ describe('HTTP integration', () => {
   it('GET /health returns OK payload', async () => {
     const res = await request(getApp()).get('/health');
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ ok: true, name: 'mcp-car-rental', version: '1.0.0' });
+    expect(res.body).toMatchObject({ ok: true, name: 'mcp-ai-server', version: '1.0.0' });
   });
 
   it('GET / returns endpoint metadata', async () => {
@@ -37,7 +37,7 @@ describe('HTTP integration', () => {
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({
       ok: true,
-      name: 'mcp-car-rental',
+      name: 'mcp-ai-server',
       endpoints: {
         health: '/health',
         mcp: '/mcp',

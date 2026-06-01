@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-LABEL="com.kostas.mcp-car-rental"
+LABEL="com.kostas.mcp-ai-server"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 PLIST_SRC="$SCRIPT_DIR/$LABEL.plist"
 PLIST_DST="$HOME/Library/LaunchAgents/$LABEL.plist"
-LOG_DIR="$HOME/Library/Logs/mcp-car-rental"
+LOG_DIR="$HOME/Library/Logs/mcp-ai-server"
 
-echo "── MCP Car Rental – macOS Service Installer ──"
+echo "-- MCP AI Server macOS Service Installer --"
 
 # Detect npm
 NPM_PATH="$(which npm 2>/dev/null || true)"

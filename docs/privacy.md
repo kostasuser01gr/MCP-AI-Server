@@ -1,13 +1,13 @@
 # Privacy Policy
 
 **Effective Date:** 19 February 2026
-**Application:** MCP Car Rental — Fleet Management Server
+**Application:** MCP AI Server - Fleet Management Workspace
 
 ---
 
 ## 1. Overview
 
-MCP Car Rental is an internal enterprise application used to manage car rental fleet operations. It provides authorised personnel with tools for vehicle tracking, maintenance logging, wash scheduling, sales recording, and operational reporting.
+MCP AI Server is an internal enterprise application used to manage fleet operations through authenticated Model Context Protocol tools. It provides authorised personnel with tools for vehicle tracking, maintenance logging, wash scheduling, sales recording, and operational reporting.
 
 This application is a business-to-business (B2B) internal tool. It is not a consumer-facing product and does not interact with or collect data from the general public.
 
