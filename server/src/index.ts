@@ -6,7 +6,7 @@ import { getApp } from './app.js';
 // ── Start ──
 const app = getApp();
 const server = app.listen(config.PORT, () => {
-  logger.info(`🚗 MCP Car Rental server on port ${config.PORT}`);
+  logger.info(`MCP AI Server on port ${config.PORT}`);
   logger.info(`   Auth mode: ${config.AUTH_MODE}`);
   logger.info(`   MCP endpoint: http://localhost:${config.PORT}/mcp`);
   logger.info(`   API endpoint: http://localhost:${config.PORT}/api/v1`);

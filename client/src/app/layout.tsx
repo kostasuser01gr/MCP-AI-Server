@@ -5,8 +5,8 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin', 'greek'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'AI Hub — Free AI Chat Platform',
-  description: 'Instant AI answers from multiple free models. Install on any device.',
+  title: 'MCP AI Server - Model Context Protocol Workspace',
+  description: 'Tool-enabled AI workspace for Model Context Protocol agents and local-first operations.',
   manifest: '/manifest.json',
   icons: {
     icon: '/icons/icon-192.png',
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'AI Hub',
+    title: 'MCP AI Server',
   },
 };
 

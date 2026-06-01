@@ -1,4 +1,4 @@
-# MCP Car Rental
+# MCP AI Server
 
 [![CI](https://github.com/kostasuser01gr/MCP-AI-Server/actions/workflows/ci.yml/badge.svg)](https://github.com/kostasuser01gr/MCP-AI-Server/actions/workflows/ci.yml)
 [![Local First](https://img.shields.io/badge/Mode-Local_First-green)](#quick-start)
@@ -6,7 +6,7 @@
 [![MCP](https://img.shields.io/badge/Protocol-MCP-purple)](#)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org)
 
-Local MCP server for a car rental fleet management system **+ AI Chat Hub**. Exposes tools via the Model Context Protocol (MCP) over HTTP, compatible with OpenAI Apps SDK and any MCP client. The integrated AI Chat Hub provides a free, instant chat interface powered by multiple cloud AI providers.
+Local MCP server and AI workspace for fleet operations. Exposes tools via the Model Context Protocol (MCP) over HTTP, compatible with OpenAI Apps SDK and any MCP client. The integrated MCP AI Server client provides authenticated chat, provider routing, dashboards, and admin controls.
 
 **Free to run locally** — SQLite for storage, free cloud AI models, no paid APIs, no cloud dependencies.
 
@@ -21,7 +21,7 @@ Local MCP server for a car rental fleet management system **+ AI Chat Hub**. Exp
 ## Features
 
 - **MCP Server** — 6 fleet management tools via JSON-RPC
-- **AI Chat Hub** — ChatGPT-like interface with 10+ free AI models
+- **MCP AI Server Client** — ChatGPT-like interface with 10+ free AI models
 - **Smart Router** — auto-selects fastest available provider, auto-fallback on rate limits
 - **SSE Streaming** — instant token-by-token responses
 - **PWA** — installable on any device/OS from the browser
@@ -204,9 +204,9 @@ This will:
 ### Status & Logs
 
 ```bash
-launchctl print gui/$(id -u)/com.kostas.mcp-car-rental
-tail -f ~/Library/Logs/mcp-car-rental/out.log
-tail -f ~/Library/Logs/mcp-car-rental/err.log
+launchctl print gui/$(id -u)/com.kostas.mcp-ai-server
+tail -f ~/Library/Logs/mcp-ai-server/out.log
+tail -f ~/Library/Logs/mcp-ai-server/err.log
 ```
 
 ### Uninstall
@@ -271,14 +271,14 @@ This verifies: health endpoint, MCP tools/list, tools/call, auth, and verificati
 | 404 NOT_FOUND on Vercel | Confirm root `vercel.json` + `api/index.ts` exist and project Root Directory is `.` |
 | `FUNCTION_INVOCATION_FAILED` on Vercel | Check runtime logs and verify required env vars (`MCP_API_KEY`, `JWT_SECRET`, `AUTH_MODE`, `DB_PATH`) are set correctly |
 | DB locked errors | Only one server process should access DB. Stop duplicates. |
-| launchd won't start | Check `~/Library/Logs/mcp-car-rental/err.log` |
+| launchd won't start | Check `~/Library/Logs/mcp-ai-server/err.log` |
 | Server stops when lid closes | See "Lid Closed" section above |
 | Tools not found by OpenAI | Ensure verification file has correct token, URL is reachable |
 
 ## Project Structure
 
 ```
-mcp-car-rental/
+mcp-ai-server/
 ├── .editorconfig             # Editor formatting rules
 ├── .env.example              # Environment template
 ├── .gitignore
@@ -388,8 +388,8 @@ curl -i http://localhost:3030/.well-known/mcp-verification.txt
 cd server && MCP_API_KEY=YOUR_KEY npm run smoke
 
 # 6. launchd status (if installed)
-launchctl print gui/$(id -u)/com.kostas.mcp-car-rental
-tail -5 ~/Library/Logs/mcp-car-rental/out.log
+launchctl print gui/$(id -u)/com.kostas.mcp-ai-server
+tail -5 ~/Library/Logs/mcp-ai-server/out.log
 ```
 
 ---

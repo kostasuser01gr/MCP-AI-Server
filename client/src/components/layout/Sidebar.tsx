@@ -81,7 +81,7 @@ export default function Sidebar() {
         {!collapsed && (
           <div className="flex items-center gap-2">
             <Bot className="w-7 h-7 text-brand-500" />
-            <span className="font-bold text-lg">AI Hub</span>
+            <span className="font-bold text-lg">MCP AI Server</span>
           </div>
         )}
         <button

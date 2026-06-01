@@ -27,37 +27,37 @@ export default function LoginPage() {
 
   return (
     <div className="flex-1 flex">
-      {/* Left panel — branding */}
+      {/* Left panel - branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-brand-600 to-brand-900 text-white p-12 flex-col justify-between">
         <div>
           <div className="flex items-center gap-3 mb-2">
             <Bot className="w-10 h-10" />
-            <h1 className="text-3xl font-bold">AI Hub</h1>
+            <h1 className="text-3xl font-bold">MCP AI Server</h1>
           </div>
-          <p className="text-brand-200 text-lg">Free AI Chat Platform</p>
+          <p className="text-brand-200 text-lg">Model Context Protocol workspace</p>
         </div>
 
         <div className="space-y-6">
-          <Feature icon="⚡" title="Instant Answers" desc="Sub-200ms responses from the fastest free models" />
-          <Feature icon="🔄" title="10+ Models" desc="Groq, Gemini, Cerebras, and more — all free" />
-          <Feature icon="📲" title="Install Anywhere" desc="Works on any device — install as an app from your browser" />
-          <Feature icon="🔒" title="Private & Secure" desc="Self-hosted, your data stays on your server" />
+          <Feature icon="->" title="MCP Endpoints" desc="Expose authenticated tools over stable MCP and REST interfaces" />
+          <Feature icon="[]" title="Tool-Enabled Agents" desc="Route chat and automation through registered operational tools" />
+          <Feature icon=".." title="Install Anywhere" desc="Use the workspace in a browser or install it as a local app" />
+          <Feature icon="**" title="Private & Secure" desc="Self-hosted by default, with data kept on your infrastructure" />
         </div>
 
         <p className="text-brand-300 text-sm">
-          Free forever. No API costs. No restrictions.
+          Local-first MCP infrastructure for controlled AI operations.
         </p>
       </div>
 
-      {/* Right panel — form */}
+      {/* Right panel - form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-8">
           <div className="lg:hidden text-center mb-8">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Bot className="w-8 h-8 text-brand-500" />
-              <h1 className="text-2xl font-bold">AI Hub</h1>
+              <h1 className="text-2xl font-bold">MCP AI Server</h1>
             </div>
-            <p className="text-[var(--text-secondary)]">Free AI Chat Platform</p>
+            <p className="text-[var(--text-secondary)]">Model Context Protocol workspace</p>
           </div>
 
           <div>
@@ -133,7 +133,7 @@ export default function LoginPage() {
 
           <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] justify-center">
             <Sparkles className="w-3 h-3" />
-            <span>100% free — no credit card required</span>
+            <span>Local-first workspace for MCP-enabled agents</span>
           </div>
         </div>
       </div>

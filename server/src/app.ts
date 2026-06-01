@@ -137,14 +137,14 @@ export function getApp(): express.Express {
 
   // ── Health check (no auth) ──
   app.get('/health', (_req, res) => {
-    res.json({ ok: true, name: 'mcp-car-rental', version: '1.0.0' });
+    res.json({ ok: true, name: 'mcp-ai-server', version: '1.0.0' });
   });
 
   // ── Root info endpoint ──
   app.get('/', (_req, res) => {
     res.json({
       ok: true,
-      name: 'mcp-car-rental',
+      name: 'mcp-ai-server',
       endpoints: {
         health: '/health',
         mcp: '/mcp',

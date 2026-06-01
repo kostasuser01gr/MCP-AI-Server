@@ -12,7 +12,7 @@ import { logger } from '../logger.js';
  */
 export function createMcpServer(): Server {
   const server = new Server(
-    { name: 'mcp-car-rental', version: '1.0.0' },
+    { name: 'mcp-ai-server', version: '1.0.0' },
     { capabilities: { tools: {} } },
   );
 

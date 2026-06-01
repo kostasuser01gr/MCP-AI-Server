@@ -1,5 +1,5 @@
 {
-  "name": "mcp-car-rental",
+  "name": "mcp-ai-server",
   "private": true,
   "scripts": {
     "dev": "npm run dev:server",

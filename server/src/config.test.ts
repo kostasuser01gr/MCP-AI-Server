@@ -84,7 +84,7 @@ describe('validateEnv', () => {
       AUTH_MODE: 'api_key',
       MCP_API_KEY: '<MCP_API_KEY>',
       JWT_SECRET: '<MCP_API_KEY>',
-      CLIENT_ORIGIN: 'https://mcp-car-rental.vercel.app',
+      CLIENT_ORIGIN: 'https://mcp-ai-server.example.com',
       LOG_LEVEL: 'info',
     });
 

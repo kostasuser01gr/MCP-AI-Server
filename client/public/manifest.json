@@ -1,7 +1,7 @@
 {
-  "name": "AI Hub",
-  "short_name": "AI Hub",
-  "description": "Free AI Chat Platform — Instant answers from multiple models",
+  "name": "MCP AI Server",
+  "short_name": "MCP AI",
+  "description": "Model Context Protocol server and AI workspace for tool-enabled agents",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
@@ -28,13 +28,13 @@
       "name": "New Chat",
       "short_name": "Chat",
       "url": "/chat",
-      "description": "Start a new conversation"
+      "description": "Start a new agent conversation"
     },
     {
       "name": "Dashboard",
       "short_name": "Stats",
       "url": "/dashboard",
-      "description": "View usage dashboard"
+      "description": "View MCP server usage"
     }
   ]
 }

@@ -44,16 +44,16 @@ export default function SignupPage() {
         <div>
           <div className="flex items-center gap-3 mb-2">
             <Bot className="w-10 h-10" />
-            <h1 className="text-3xl font-bold">AI Hub</h1>
+            <h1 className="text-3xl font-bold">MCP AI Server</h1>
           </div>
-          <p className="text-brand-200 text-lg">Join the Free AI Revolution</p>
+          <p className="text-brand-200 text-lg">Create your MCP workspace account</p>
         </div>
 
         <div className="space-y-6">
-          <Feature icon="💬" title="Unlimited Chat" desc="No message limits, no daily caps" />
-          <Feature icon="🧠" title="Multiple AI Models" desc="Switch between models for the best answer" />
-          <Feature icon="📊" title="Usage Dashboard" desc="Track your usage and performance analytics" />
-          <Feature icon="👥" title="Team Ready" desc="Invite your team, manage roles and access" />
+          <Feature icon="[]" title="Agent Workspace" desc="Run tool-enabled conversations through your MCP server" />
+          <Feature icon="{}" title="Operational Tools" desc="Register, inspect, and call business tools from one interface" />
+          <Feature icon="##" title="Usage Dashboard" desc="Track workspace activity, provider health, and operations" />
+          <Feature icon="++" title="Team Ready" desc="Invite your team, manage roles, and control access" />
         </div>
 
         <div className="flex items-center gap-2 text-brand-200 text-sm">
@@ -68,13 +68,13 @@ export default function SignupPage() {
           <div className="lg:hidden text-center mb-8">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Bot className="w-8 h-8 text-brand-500" />
-              <h1 className="text-2xl font-bold">AI Hub</h1>
+              <h1 className="text-2xl font-bold">MCP AI Server</h1>
             </div>
           </div>
 
           <div>
             <h2 className="text-2xl font-bold">Create your account</h2>
-            <p className="text-[var(--text-secondary)] mt-1">Get started in seconds — completely free</p>
+            <p className="text-[var(--text-secondary)] mt-1">Set up access to your MCP AI workspace</p>
           </div>
 
           {error && (
