@@ -10,6 +10,8 @@ Local MCP server and AI workspace for fleet operations. Exposes tools via the Mo
 
 **Free to run locally** — SQLite for storage, free cloud AI models, no paid APIs, no cloud dependencies.
 
+**Portfolio review UX:** the client root route is a public overview, not a sign-in wall. Protected chat and admin surfaces still require authentication.
+
 > **Live deployment status:** There is currently no verified public demo URL for this repository. If a GitHub homepage or README link points to an unrelated app, do not use it for OpenAI MCP registration.
 
 > **Zero-charge mode:** This repository is local-first. Do not run deployment, linking, hosted secret, or platform project commands unless you explicitly approve hosted platform changes and any possible billing exposure.
