@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-LABEL="com.kostas.mcp-ai-server"
+LABEL="com.mcp-ai-server.local"
 PLIST_DST="$HOME/Library/LaunchAgents/$LABEL.plist"
 
 echo "-- MCP AI Server macOS Service Uninstaller --"

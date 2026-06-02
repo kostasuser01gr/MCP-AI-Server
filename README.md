@@ -206,7 +206,7 @@ This will:
 ### Status & Logs
 
 ```bash
-launchctl print gui/$(id -u)/com.kostas.mcp-ai-server
+launchctl print gui/$(id -u)/com.mcp-ai-server.local
 tail -f ~/Library/Logs/mcp-ai-server/out.log
 tail -f ~/Library/Logs/mcp-ai-server/err.log
 ```
@@ -390,7 +390,7 @@ curl -i http://localhost:3030/.well-known/mcp-verification.txt
 cd server && MCP_API_KEY=YOUR_KEY npm run smoke
 
 # 6. launchd status (if installed)
-launchctl print gui/$(id -u)/com.kostas.mcp-ai-server
+launchctl print gui/$(id -u)/com.mcp-ai-server.local
 tail -5 ~/Library/Logs/mcp-ai-server/out.log
 ```
 

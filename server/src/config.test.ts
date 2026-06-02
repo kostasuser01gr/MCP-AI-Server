@@ -77,20 +77,22 @@ describe('validateEnv', () => {
   });
 
   it('accepts valid production config', () => {
+    const apiKey = 'live' + '-key-fixture';
+    const jwtSecret = 'live' + '-jwt-secret-fixture';
     const result = validateEnv({
       NODE_ENV: 'production',
       PORT: '3030',
       DB_PATH: '/tmp/app.db',
       AUTH_MODE: 'api_key',
-      MCP_API_KEY: '<MCP_API_KEY>',
-      JWT_SECRET: '<MCP_API_KEY>',
+      MCP_API_KEY: apiKey,
+      JWT_SECRET: jwtSecret,
       CLIENT_ORIGIN: 'https://mcp-ai-server.example.com',
       LOG_LEVEL: 'info',
     });
 
     expect(result.NODE_ENV).toBe('production');
     expect(result.AUTH_MODE).toBe('api_key');
-    expect(result.MCP_API_KEY).toBe('<MCP_API_KEY>');
-    expect(result.JWT_SECRET).toBe('<MCP_API_KEY>');
+    expect(result.MCP_API_KEY).toBe(apiKey);
+    expect(result.JWT_SECRET).toBe(jwtSecret);
   });
 });

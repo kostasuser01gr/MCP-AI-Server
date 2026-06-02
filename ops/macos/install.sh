@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-LABEL="com.kostas.mcp-ai-server"
+LABEL="com.mcp-ai-server.local"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 PLIST_SRC="$SCRIPT_DIR/$LABEL.plist"

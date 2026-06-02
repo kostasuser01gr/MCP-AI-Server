@@ -5,7 +5,7 @@
 <dict>
 
   <key>Label</key>
-  <string>com.kostas.mcp-ai-server</string>
+  <string>com.mcp-ai-server.local</string>
 
   <key>ProgramArguments</key>
   <array>
