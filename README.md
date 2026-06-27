@@ -474,3 +474,19 @@ Works on: Chrome, Edge, Safari (iOS 16+), Android. Installed app works offline (
 ## License
 
 MIT
+
+---
+
+## Author
+
+**Konstantinos Foskolakis**
+Full-stack engineer — Heraklion, Crete, Greece
+[github.com/kostasuser01gr](https://github.com/kostasuser01gr)
+
+---
+
+## Portfolio Positioning
+
+This project demonstrates Model Context Protocol (MCP) implementation from scratch — building a compliant server that exposes typed fleet management tools via JSON-RPC, integrates with the OpenAI Apps SDK, and provides a multi-provider AI chat client with automatic fallback routing. The PWA client, SSE streaming, JWT-secured admin panel, and SQLite-backed persistence are production-style decisions for a local-first deployment model. The smart router that auto-selects the fastest available AI provider and falls back on rate limits reflects the kind of reliability thinking that production AI systems require. Zero paid cloud dependencies makes this runnable and demonstrable without billing exposure.
+
+*Built as a portfolio-grade local-first MCP server and AI workspace. Estimated implementation effort for the current public version: 4–7 focused development days.*
